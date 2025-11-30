@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIKA HUB // SYSTEM</title>
+    <title>AIKA MINER // SLOTS</title>
     <style>
         :root {
-            --neon-green: #0f0;
-            --neon-pink: #f0f;
+            --neon-yellow: #ffea00;
             --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
             --bg-color: #050505;
-            --panel-bg: rgba(10, 10, 10, 0.85);
+            --panel-bg: #111;
             --text-primary: #e0e0e0;
         }
 
@@ -23,277 +23,289 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* CANVAS ДЛЯ МАТРИЦЫ */
-        #matrix {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: -1;
-            opacity: 0.25;
-        }
-
-        /* НАВИГАЦИЯ */
-        nav {
-            background: rgba(0,0,0,0.9);
-            border-bottom: 1px solid #333;
-            padding: 15px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 20px;
-            backdrop-filter: blur(5px);
+            overflow: hidden;
         }
 
-        .nav-btn {
-            background: transparent;
-            border: 1px solid #444;
-            color: #888;
-            padding: 10px 20px;
+        /* ФОНОВАЯ СЕТКА */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 200%; height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            z-index: -1;
+            top: -50%;
+            animation: gridMove 10s linear infinite;
+        }
+
+        @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(40px); } }
+
+        .container {
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+            text-align: center;
+            max-width: 500px;
+            width: 95%;
+        }
+
+        h1 { color: var(--neon-blue); margin-bottom: 20px; letter-spacing: 3px; text-shadow: 0 0 10px var(--neon-blue); }
+
+        /* СЧЕТ */
+        .score-board {
+            background: #000;
+            border: 1px solid #333;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: var(--neon-yellow);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* СЛОТЫ (СЕТКА 3x3) */
+        .slot-machine {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            background: #000;
+            padding: 15px;
+            border: 2px solid #333;
+            margin-bottom: 20px;
+        }
+
+        .slot {
+            background: #1a1a1a;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            border: 1px solid #333;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        /* Анимация победного слота */
+        .slot.win {
+            background: rgba(255, 234, 0, 0.2);
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 15px var(--neon-yellow);
+            transform: scale(1.05);
+        }
+
+        /* КНОПКА */
+        .spin-btn {
+            background: var(--neon-purple);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
             cursor: pointer;
             font-family: inherit;
             text-transform: uppercase;
-            font-weight: bold;
+            letter-spacing: 2px;
             transition: 0.3s;
+            clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%);
         }
 
-        .nav-btn:hover, .nav-btn.active {
-            border-color: var(--neon-green);
-            color: var(--neon-green);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
-            background: rgba(0, 255, 0, 0.1);
+        .spin-btn:hover {
+            background: #d048ff;
+            box-shadow: 0 0 20px var(--neon-purple);
+            transform: translateY(-2px);
         }
 
-        /* СЕКЦИИ */
-        .section {
-            display: none;
-            padding: 40px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-            animation: fadeIn 0.5s;
+        .spin-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .message {
+            height: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .legend {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #333;
+            padding-top: 10px;
         }
         
-        .section.active-section {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* ЗАЛ СЛАВЫ */
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-        }
-        .card {
-            background: var(--panel-bg);
-            border: 1px solid #333;
-            transition: transform 0.3s;
-            backdrop-filter: blur(2px);
-        }
-        .card:hover { 
-            transform: translateY(-5px); 
-            border-color: var(--neon-green); 
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-        }
-        .card-img { width: 100%; height: 250px; background: #111; object-fit: cover; }
-        .card-info { padding: 20px; }
-
-        /* РУЛЕТКА */
-        .roulette-container { 
-            text-align: center; 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: var(--panel-bg);
-            padding: 30px;
-            border: 1px solid #333;
-        }
-        .roulette-display {
-            background: #000;
-            border: 4px solid var(--neon-blue);
-            height: 150px;
-            display: flex; align-items: center; justify-content: center;
-            margin: 20px 0;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: white;
-        }
-        textarea { width: 100%; height: 120px; background: #111; color: var(--neon-blue); border: 1px solid #333; padding: 10px; }
-
-        /* ТАЙМЕР */
-        .timer-container { 
-            text-align: center; 
-            padding-top: 50px; 
-            cursor: crosshair; 
-            background: var(--panel-bg);
-            padding: 40px;
-            border: 1px solid #333;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .timer-display {
-            font-size: 3rem;
-            color: var(--neon-pink);
-            text-shadow: 0 0 10px var(--neon-pink);
-            margin: 20px 0;
-        }
-        .spoiler-box {
-            display: none;
-            border: 1px solid var(--neon-pink);
-            padding: 20px;
-            margin-top: 20px;
-            color: var(--neon-pink);
-            background: rgba(255, 0, 255, 0.1);
-        }
-
-        @media (max-width: 600px) {
-            .timer-display { font-size: 2rem; }
-            .roulette-display { font-size: 1.5rem; }
-        }
     </style>
 </head>
 <body>
 
-    anvas id="matrix"></canvas>
+    <div class="container">
+        <h1>RESOURCE MINER</h1>
 
-    <nav>
-        <button class="nav-btn active" onclick="showSection('hall')">HALL OF FAME</button>
-        <button class="nav-btn" onclick="showSection('roulette')">ROULETTE</button>
-        <button class="nav-btn" onclick="showSection('timer')">STATUS</button>
-    </nav>
-
-    <div id="hall" class="section active-section">
-        <h1 style="text-align:center; margin-bottom:40px; color:var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">DATABASE</h1>
-        <div class="gallery" id="gallery"></div>
-    </div>
-
-    <div id="roulette" class="section">
-        <div class="roulette-container">
-            <h1 style="color:var(--neon-blue); margin-bottom:20px">DECRYPTION TOOL</h1>
-            <div id="setupPanel">
-                <textarea id="namesInput" placeholder="Вставь ники участников..."></textarea>
-                <button class="nav-btn" style="margin-top:20px; width:100%; border-color:var(--neon-blue); color:var(--neon-blue)" onclick="startRoulette()">ЗАПУСК</button>
-            </div>
-            <div id="rouletteDisplay" class="roulette-display" style="display:none">READY</div>
-            <button id="resetBtn" class="nav-btn" style="display:none; border-color:var(--neon-blue)" onclick="resetRoulette()">RESET</button>
+        <div class="score-board">
+            <span>CREDITS:</span>
+            <span id="score">0</span>
         </div>
-    </div>
 
-    <div id="timer" class="section">
-        <div class="timer-container" onclick="handleTimerClick()">
-            <h1 style="color:#888; letter-spacing: 5px;">NEXT DROP IN:</h1>
-            <div class="timer-display" id="countdown">00:00:00</div>
-            <p id="hint" style="color:#555; margin-top:20px">>> CLICK 5 TIMES TO HACK SYSTEM</p>
-            <div id="spoiler" class="spoiler-box">
-                <strong>ACCESS GRANTED:</strong><br>
-                В следующем выпуске... (Секретная информация)
-            </div>
+        <div class="slot-machine" id="grid">
+            <!-- 9 Слотов генерируются здесь -->
+            <div class="slot">?</div><div class="slot">?</div><div class="slot">?</div>
+            <div class="slot">?</div><div class="slot">?</div><div class="slot">?</div>
+            <div class="slot">?</div><div class="slot">?</div><div class="slot">?</div>
+        </div>
+
+        <button class="spin-btn" id="spinBtn" onclick="spin()">MINING START</button>
+        
+        <div class="message" id="msg">>> SYSTEM READY</div>
+
+        <div class="legend">
+            <div>💎 = 1000</div>
+            <div>🔋 = 200</div>
+            <div>💾 = 50</div>
+            <div>👾 = 10</div>
         </div>
     </div>
 
     <script>
-        // MATRIX
-        const canvas = document.getElementById('matrix');
-        const ctx = canvas.getContext('2d');
-        function resizeMatrix() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeMatrix);
-        resizeMatrix();
-        const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const charArray = chars.split('');
-        const fontSize = 14;
-        const columns = canvas.width / fontSize;
-        const drops = [];
-        for(let x = 0; x < columns; x++) drops[x] = 1;
-        function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0F0';
-            ctx.font = fontSize + 'px monospace';
-            for(let i = 0; i < drops.length; i++) {
-                const text = charArray[Math.floor(Math.random() * charArray.length)];
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
-        }
-        setInterval(drawMatrix, 33);
-
-        // NAV
-        function showSection(id) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active-section');
-            event.target.classList.add('active');
-        }
-
-        // DATA
-        const characters = [
-            { name: "НИК_ПОДПИСЧИКА", episode: "#001", role: "PIONEER", img: "https://via.placeholder.com/300/000000/00ff00?text=USER" },
-            { name: "LOCKED SLOT", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" },
-            { name: "LOCKED SLOT", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" }
+        // === НАСТРОЙКИ ИГРЫ ===
+        const RESOURCES = [
+            { icon: '👾', value: 10, chance: 40 }, // Глитч (Частый)
+            { icon: '💾', value: 50, chance: 30 }, // Дискета (Обычный)
+            { icon: '🔋', value: 200, chance: 20 }, // Батарея (Редкий)
+            { icon: '💎', value: 1000, chance: 10 } // Алмаз (Легендарный)
         ];
 
-        const gallery = document.getElementById('gallery');
-        characters.forEach(c => {
-            const isLocked = c.name.includes("LOCKED");
-            const colorStyle = isLocked ? "color:#555" : "color:white";
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <img src="${c.img}" class="card-img" style="${isLocked ? 'filter:grayscale(100%) brightness(50%)' : ''}">
-                <div class="card-info">
-                    <h3 style="${colorStyle}">${c.name}</h3>
-                    <p style="color:#666; font-size:0.9rem">${c.episode} // ${c.role}</p>
-                </div>
-            `;
-            gallery.appendChild(div);
-        });
+        const WIN_THRESHOLD = 5; // Сколько нужно собрать (5 из 9)
 
-        // ROULETTE
-        const display = document.getElementById('rouletteDisplay');
-        const input = document.getElementById('namesInput');
-        function startRoulette() {
-            const names = input.value.split('\n').filter(n => n.trim());
-            if (names.length < 2) return alert("Нужно больше имен!");
-            document.getElementById('setupPanel').style.display = 'none';
-            display.style.display = 'flex';
-            let count = 0;
-            let speed = 50;
-            function step() {
-                display.innerText = names[Math.floor(Math.random() * names.length)];
-                count++;
-                if (count < 50) setTimeout(step, speed += 2);
-                else {
-                    display.style.borderColor = 'var(--neon-green)';
-                    display.style.color = 'var(--neon-green)';
-                    document.getElementById('resetBtn').style.display = 'inline-block';
+        let score = 0;
+        let isSpinning = false;
+        const slots = document.querySelectorAll('.slot');
+        const scoreEl = document.getElementById('score');
+        const msgEl = document.getElementById('msg');
+        const btn = document.getElementById('spinBtn');
+
+        // Генерация случайного ресурса с учетом шансов
+        function getRandomResource() {
+            const rand = Math.random() * 100;
+            let sum = 0;
+            for (let res of RESOURCES) {
+                sum += res.chance;
+                if (rand <= sum) return res;
+            }
+            return RESOURCES[0];
+        }
+
+        // Звуковой эффект (Синтезатор)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'spin') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'win') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
+
+        async function spin() {
+            if (isSpinning) return;
+            isSpinning = true;
+            btn.disabled = true;
+            msgEl.innerText = ">> MINING IN PROGRESS...";
+            
+            // Сброс подсветки
+            slots.forEach(s => s.classList.remove('win'));
+
+            // Анимация прокрутки (2 секунды)
+            let spins = 0;
+            const interval = setInterval(() => {
+                slots.forEach(slot => {
+                    slot.innerText = getRandomResource().icon;
+                });
+                playSound('spin');
+                spins++;
+                if (spins > 20) { // Останавливаемся после 20 тиков
+                    clearInterval(interval);
+                    finalizeResult();
+                }
+            }, 100);
+        }
+
+        function finalizeResult() {
+            const finalResults = [];
+            const counts = {};
+
+            // 1. Генерируем финальный результат
+            slots.forEach((slot, index) => {
+                const res = getRandomResource();
+                slot.innerText = res.icon;
+                slot.dataset.type = res.icon; // Сохраняем тип для проверки
+                finalResults.push(res);
+                
+                // Считаем количество
+                counts[res.icon] = (counts[res.icon] || 0) + 1;
+            });
+
+            // 2. Проверяем победу
+            let won = false;
+            let winType = null;
+
+            for (const [icon, count] of Object.entries(counts)) {
+                if (count >= WIN_THRESHOLD) {
+                    won = true;
+                    winType = icon;
+                    break;
                 }
             }
-            step();
-        }
-        function resetRoulette() {
-            document.getElementById('setupPanel').style.display = 'block';
-            display.style.display = 'none';
-            document.getElementById('resetBtn').style.display = 'none';
-            display.style.borderColor = 'var(--neon-blue)';
-            display.style.color = 'white';
-        }
 
-        // TIMER
-        const dropDate = new Date(2025, 11, 5, 18).getTime();
-        setInterval(() => {
-            const now = new Date().getTime();
-            const d = dropDate - now;
-            if (d < 0) return document.getElementById('countdown').innerText = "ONLINE";
+            // 3. Обработка результата
+            if (won) {
+                const resourceData = RESOURCES.find(r => r.icon === winType);
+                const winAmount = resourceData.value * 1; // Можно умножить, если хочешь
+                
+                score += winAmount;
+                scoreEl.innerText = score;
+                msgEl.innerText = `>> SUCCESS! FOUND ${winType} PACK (+${winAmount})`;
+                msgEl.style.color = "var(--neon-yellow)";
+                playSound('win');
+
+                // Подсветка победных слотов
+                slots.forEach(slot => {
+                    if (slot.dataset.type === winType) slot.classList.add('win');
+                });
+            } else {
+                msgEl.innerText = ">> NO RESOURCES FOUND";
+                msgEl.style.color = "#aaa";
+            }
+
+            isSpinning = false;
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
