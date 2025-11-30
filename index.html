@@ -3,266 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>АЙКА ШОУ: ЛИДЕРБОРД</title>
+    <title>AIKA HUB // SYSTEM</title>
     <style>
         :root {
             --neon-green: #0f0;
             --neon-pink: #f0f;
+            --neon-blue: #00f3ff;
             --bg-color: #050505;
-            --card-bg: #0a0a0a;
+            --panel-bg: #0a0a0a;
             --text-primary: #e0e0e0;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-primary);
             font-family: 'Courier New', Courier, monospace;
-            overflow-x: hidden;
             min-height: 100vh;
-            padding-bottom: 50px;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
         }
 
-        /* Эффект старого монитора (CRT Scanlines) */
-        body::before {
-            content: " ";
-            display: block;
-            position: absolute;
+        /* НАВИГАЦИЯ */
+        nav {
+            background: rgba(0,0,0,0.9);
+            border-bottom: 1px solid #333;
+            padding: 15px;
+            position: sticky;
             top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
         }
 
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            border-bottom: 2px solid var(--neon-green);
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        h1 {
-            font-size: 2.5rem;
+        .nav-btn {
+            background: transparent;
+            border: 1px solid #444;
+            color: #888;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
             text-transform: uppercase;
-            text-shadow: 2px 2px var(--neon-pink);
-            letter-spacing: 5px;
-            animation: glitch 1s linear infinite;
+            font-weight: bold;
+            transition: 0.3s;
         }
 
-        .subtitle {
+        .nav-btn:hover, .nav-btn.active {
+            border-color: var(--neon-green);
             color: var(--neon-green);
-            margin-top: 10px;
-            font-size: 0.9rem;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
 
-        .container {
+        /* СЕКЦИИ (Страницы) */
+        .section {
+            display: none; /* Скрываем все секции по умолчанию */
+            padding: 40px 20px;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            width: 100%;
+            animation: fadeIn 0.5s;
+        }
+        
+        .section.active-section {
+            display: block; /* Показываем активную */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* === СТИЛИ ДЛЯ ЗАЛА СЛАВЫ === */
+        .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px;
         }
-
-        /* Карточка персонажа */
         .card {
-            background: var(--card-bg);
+            background: var(--panel-bg);
             border: 1px solid #333;
-            position: relative;
-            transition: transform 0.3s, box-shadow 0.3s;
-            overflow: hidden;
+            transition: transform 0.3s;
         }
+        .card:hover { transform: translateY(-5px); border-color: var(--neon-green); }
+        .card-img { width: 100%; height: 250px; background: #111; object-fit: cover; }
+        .card-info { padding: 20px; }
 
-        .card:hover {
-            transform: translateY(-5px);
-            border-color: var(--neon-green);
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-        }
-
-        .card-image-container {
-            width: 100%;
-            height: 250px;
-            background-color: #111;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid #333;
-            overflow: hidden;
-        }
-
-        .card-image {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            filter: grayscale(100%) contrast(120%);
-            transition: filter 0.3s;
-        }
-
-        .card:hover .card-image {
-            filter: grayscale(0%) contrast(100%);
-        }
-
-        .card-info {
-            padding: 20px;
-        }
-
-        .card-name {
-            font-size: 1.5rem;
+        /* === СТИЛИ ДЛЯ РУЛЕТКИ === */
+        .roulette-container { text-align: center; max-width: 600px; margin: 0 auto; }
+        .roulette-display {
+            background: #000;
+            border: 4px solid var(--neon-blue);
+            height: 150px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 20px 0;
+            font-size: 2.5rem;
             font-weight: bold;
             color: white;
-            margin-bottom: 10px;
-            text-transform: uppercase;
         }
+        textarea { width: 100%; height: 120px; background: #111; color: var(--neon-blue); border: 1px solid #333; padding: 10px; }
 
-        .card-meta {
-            font-size: 0.8rem;
-            color: #888;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
+        /* === СТИЛИ ДЛЯ ТАЙМЕРА === */
+        .timer-container { text-align: center; padding-top: 50px; cursor: crosshair; }
+        .timer-display {
+            font-size: 3rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 10px var(--neon-pink);
+            margin: 20px 0;
         }
-
-        .badge {
-            background: var(--neon-pink);
-            color: black;
-            padding: 2px 8px;
-            font-weight: bold;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-        }
-
-        .description {
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: #ccc;
-        }
-
-        /* Кнопка-призыв */
-        .cta-section {
-            text-align: center;
-            margin-top: 60px;
-            margin-bottom: 40px;
-            z-index: 10;
-            position: relative;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 15px 30px;
-            background: transparent;
-            border: 2px solid var(--neon-green);
-            color: var(--neon-green);
-            text-decoration: none;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 1.2rem;
-            transition: 0.3s;
-            cursor: pointer;
-        }
-
-        .btn:hover {
-            background: var(--neon-green);
-            color: black;
-            box-shadow: 0 0 20px var(--neon-green);
-        }
-
-        /* Анимация глюка */
-        @keyframes glitch {
-            2%, 64% { transform: translate(2px,0) skew(0deg); }
-            4%, 60% { transform: translate(-2px,0) skew(0deg); }
-            62% { transform: translate(0,0) skew(5deg); }
+        .spoiler-box {
+            display: none;
+            border: 1px solid var(--neon-pink);
+            padding: 20px;
+            margin-top: 20px;
+            color: var(--neon-pink);
         }
 
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>AIKA DATABASE</h1>
-        <p class="subtitle">>> SYSTEM STATUS: ONLINE</p>
-        <p class="subtitle">>> LOADING LEGENDS...</p>
-    </header>
+    <!-- ПАНЕЛЬ НАВИГАЦИИ -->
+    <nav>
+        <button class="nav-btn active" onclick="showSection('hall')">HALL OF FAME</button>
+        <button class="nav-btn" onclick="showSection('roulette')">ROULETTE</button>
+        <button class="nav-btn" onclick="showSection('timer')">STATUS</button>
+    </nav>
 
-    <div class="container" id="gallery">
-        <!-- Сюда JS будет вставлять карточки -->
+    <!-- СЕКЦИЯ 1: ЗАЛ СЛАВЫ -->
+    <div id="hall" class="section active-section">
+        <h1 style="text-align:center; margin-bottom:40px; color:var(--neon-green)">DATABASE</h1>
+        <div class="gallery" id="gallery">
+            <!-- JS заполнит это -->
+        </div>
     </div>
 
-    <div class="cta-section">
-        <p style="margin-bottom: 20px;">ХОЧЕШЬ ПОПАСТЬ В БАЗУ?</p>
-        <a href="https://t.me/+fEfb5UA0NEdiYzc6" class="btn">ЗАГРУЗИТЬ ПЕРСОНАЖА</a>
+    <!-- СЕКЦИЯ 2: РУЛЕТКА -->
+    <div id="roulette" class="section">
+        <div class="roulette-container">
+            <h1 style="color:var(--neon-blue); margin-bottom:20px">DECRYPTION TOOL</h1>
+            
+            <div id="setupPanel">
+                <textarea id="namesInput" placeholder="Вставь ники участников (каждый с новой строки)..."></textarea>
+                <button class="nav-btn" style="margin-top:20px; width:100%; border-color:var(--neon-blue); color:var(--neon-blue)" onclick="startRoulette()">ЗАПУСК</button>
+            </div>
+
+            <div id="rouletteDisplay" class="roulette-display" style="display:none">READY</div>
+            <button id="resetBtn" class="nav-btn" style="display:none; border-color:var(--neon-blue)" onclick="resetRoulette()">RESET</button>
+        </div>
+    </div>
+
+    <!-- СЕКЦИЯ 3: ТАЙМЕР -->
+    <div id="timer" class="section">
+        <div class="timer-container" onclick="handleTimerClick()">
+            <h1 style="color:#555">NEXT DROP</h1>
+            <div class="timer-display" id="countdown">00:00:00</div>
+            <p id="hint" style="color:#333; margin-top:20px">>> CLICK 5 TIMES TO HACK</p>
+            
+            <div id="spoiler" class="spoiler-box">
+                СПОЙЛЕР: В новом выпуске... (Измени меня в коде)
+            </div>
+        </div>
     </div>
 
     <script>
-        // ==========================================
-        // ТВОЯ БАЗА ДАННЫХ (РЕДАКТИРУЙ ЗДЕСЬ)
-        // ==========================================
+        // === 1. НАВИГАЦИЯ ===
+        function showSection(id) {
+            // Скрыть все секции
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            
+            // Показать нужную
+            document.getElementById(id).classList.add('active-section');
+            
+            // Подсветка кнопки (немного костыльно, но работает)
+            event.target.classList.add('active');
+        }
+
+        // === 2. ЗАЛ СЛАВЫ (ДАННЫЕ) ===
         const characters = [
-            {
-                id: 1,
-                name: "rnmwhd", 
-                episode: "EPISODE #001",
-                role: "ПЕРВОПРОХОДЕЦ",
-                desc: "Тот самый первый подписчик, который взломал систему и прошел викторину. Легенда начала времен..",
-                // Вставь ссылку на фото персонажа ниже. Если фото нет, оставь заглушку.
-                image: "https://via.placeholder.com/400x400/000000/00ff00?text=GLITCH_USER" 
-            },
-            {
-                id: 2,
-                name: "LOCKED SLOT",
-                episode: "EPISODE #002",
-                role: "UNKNOWN",
-                desc: "Слот заблокирован. Ожидание загрузки данных из Телеграм канала...",
-                image: "https://via.placeholder.com/400x400/111111/333333?text=LOCKED"
-            },
-             {
-                id: 3,
-                name: "LOCKED SLOT",
-                episode: "EPISODE #003",
-                role: "UNKNOWN",
-                desc: "Слот заблокирован. Ожидание загрузки данных из Телеграм канала...",
-                image: "https://via.placeholder.com/400x400/111111/333333?text=LOCKED"
-            }
+            { name: "НИК_ПОДПИСЧИКА", episode: "#001", role: "PIONEER", img: "https://via.placeholder.com/300/000000/00ff00?text=USER" },
+            { name: "LOCKED", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" },
+            { name: "LOCKED", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" }
         ];
 
-        // Логика отрисовки (Не трогай, если не знаешь JS)
         const gallery = document.getElementById('gallery');
-
-        characters.forEach(char => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            
-            // Проверка на "закрытый слот" для смены стиля
-            const isLocked = char.name === "LOCKED SLOT";
-            const badgeColor = isLocked ? 'background: #333; color: #777;' : '';
-
-            card.innerHTML = `
-                <div class="card-image-container">
-                    <img src="${char.image}" alt="${char.name}" class="card-image">
-                </div>
+        characters.forEach(c => {
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <img src="${c.img}" class="card-img">
                 <div class="card-info">
-                    <div class="card-meta">
-                        <span>${char.episode}</span>
-                        <span class="badge" style="${badgeColor}">${char.role}</span>
-                    </div>
-                    <h3 class="card-name" style="${isLocked ? 'color: #555;' : ''}">${char.name}</h3>
-                    <p class="description">${char.desc}</p>
+                    <h3 style="color:white">${c.name}</h3>
+                    <p style="color:#666">${c.episode} // ${c.role}</p>
                 </div>
             `;
-            gallery.appendChild(card);
+            gallery.appendChild(div);
         });
-    </script>
 
+        // === 3. РУЛЕТКА ===
+        const display = document.getElementById('rouletteDisplay');
+        const input = document.getElementById('namesInput');
+        
+        function startRoulette() {
+            const names = input.value.split('\n').filter(n => n.trim());
+            if (names.length < 2) return alert("Нужно больше имен!");
+            
+            document.getElementById('setupPanel').style.display = 'none';
+            display.style.display = 'flex';
+            
+            let count = 0;
+            let speed = 50;
+            
+            function step() {
+                display.innerText = names[Math.floor(Math.random() * names.length)];
+                count++;
+                if (count < 50) setTimeout(step, speed += 2);
+                else {
+                    display.style.borderColor = 'var(--neon-green)';
+                    display.style.color = 'var(--neon-green)';
+                    document.getElementById('resetBtn').style.display = 'inline-block';
+                }
+            }
+            step();
+        }
+
+        function resetRoulette() {
+            document.getElementById('setupPanel').style.display = 'block';
+            display.style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            display.style.borderColor = 'var(--neon-blue)';
+            display.style.color = 'white';
+        }
+
+        // === 4. ТАЙМЕР ===
+        // Дата следующего выпуска: (Год, Месяц-1, День, Час)
+        const dropDate = new Date(2025, 11, 5, 18).getTime(); 
+        
+        setInterval(() => {
+            const now = new Date().getTime();
+            const d = dropDate - now;
+            if (d < 0) return document.getElementById('countdown').innerText = "ONLINE";
+            
+            const days = Math.floor(d/(1000*60*60*24));
+            const hours = Math.floor((d%(1000*60*60*24))/(1000*60*60));
+            const mins = Math.floor((d%(1000*60*60))/(1000*60));
+            
+            document.getElementById('countdown').innerText = `${days}d ${hours}h ${mins}m`;
+        }, 1000);
+
+        let clicks = 0;
+        function handleTimerClick() {
+            clicks++;
+            if (clicks === 5) {
+                document.getElementById('spoiler').style.display = 'block';
+                document.getElementById('hint').innerText = "ACCESS GRANTED";
+                document.getElementById('hint').style.color = "var(--neon-pink)";
+            }
+        }
+    </script>
 </body>
 </html>
-
-
