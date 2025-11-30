@@ -264,5 +264,62 @@
             }
         }
     </script>
+    <!-- === MATRIX RAIN BACKGROUND === -->
+anvas id="matrix" style="position:fixed; top:0; left:0; z-index:-1; opacity:0.3;"></canvas>
+
+<script>
+    // MATRIX RAIN SCRIPT
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+
+    // Устанавливаем размер во весь экран
+    function resizeMatrix() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeMatrix);
+    resizeMatrix();
+
+    // Символы: Катакана + Латиница + Цифры
+    const chars = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const charArray = chars.split('');
+    
+    const fontSize = 14;
+    const columns = canvas.width / fontSize; // Сколько колонок
+    
+    // Массив для капель (хранит позицию Y для каждой колонки)
+    const drops = [];
+    for(let x = 0; x < columns; x++) {
+        drops[x] = 1;
+    }
+
+    function drawMatrix() {
+        // Полупрозрачный черный фон для эффекта следа (trails)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#0F0'; // Зеленый цвет текста (можно поменять на #00F3FF для голубого)
+        ctx.font = fontSize + 'px monospace';
+
+        for(let i = 0; i < drops.length; i++) {
+            // Выбираем случайный символ
+            const text = charArray[Math.floor(Math.random() * charArray.length)];
+            
+            // Рисуем символ
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+            // Если капля улетела вниз экрана, сбрасываем её наверх случайно
+            if(drops[i] * fontSize > canvas.height && Math.random() > 0.975)
+                drops[i] = 0;
+
+            // Двигаем каплю вниз
+            drops[i]++;
+        }
+    }
+
+    // Запуск анимации (30 кадров в секунду)
+    setInterval(drawMatrix, 33);
+</script>
 </body>
 </html>
+
