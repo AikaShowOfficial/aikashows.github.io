@@ -10,7 +10,7 @@
             --neon-pink: #f0f;
             --neon-blue: #00f3ff;
             --bg-color: #050505;
-            --panel-bg: #0a0a0a;
+            --panel-bg: rgba(10, 10, 10, 0.85); /* Полупрозрачный фон */
             --text-primary: #e0e0e0;
         }
 
@@ -24,6 +24,16 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        /* CANVAS ДЛЯ МАТРИЦЫ */
+        #matrix {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1; /* Позади всего контента */
+            opacity: 0.25; /* Прозрачность дождя */
         }
 
         /* НАВИГАЦИЯ */
@@ -37,6 +47,7 @@
             display: flex;
             justify-content: center;
             gap: 20px;
+            backdrop-filter: blur(5px);
         }
 
         .nav-btn {
@@ -55,6 +66,7 @@
             border-color: var(--neon-green);
             color: var(--neon-green);
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+            background: rgba(0, 255, 0, 0.1);
         }
 
         /* СЕКЦИИ (Страницы) */
@@ -86,13 +98,25 @@
             background: var(--panel-bg);
             border: 1px solid #333;
             transition: transform 0.3s;
+            backdrop-filter: blur(2px); /* Размытие фона за карточкой */
         }
-        .card:hover { transform: translateY(-5px); border-color: var(--neon-green); }
+        .card:hover { 
+            transform: translateY(-5px); 
+            border-color: var(--neon-green); 
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
         .card-img { width: 100%; height: 250px; background: #111; object-fit: cover; }
         .card-info { padding: 20px; }
 
         /* === СТИЛИ ДЛЯ РУЛЕТКИ === */
-        .roulette-container { text-align: center; max-width: 600px; margin: 0 auto; }
+        .roulette-container { 
+            text-align: center; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: var(--panel-bg);
+            padding: 30px;
+            border: 1px solid #333;
+        }
         .roulette-display {
             background: #000;
             border: 4px solid var(--neon-blue);
@@ -106,7 +130,16 @@
         textarea { width: 100%; height: 120px; background: #111; color: var(--neon-blue); border: 1px solid #333; padding: 10px; }
 
         /* === СТИЛИ ДЛЯ ТАЙМЕРА === */
-        .timer-container { text-align: center; padding-top: 50px; cursor: crosshair; }
+        .timer-container { 
+            text-align: center; 
+            padding-top: 50px; 
+            cursor: crosshair; 
+            background: var(--panel-bg);
+            padding: 40px;
+            border: 1px solid #333;
+            max-width: 800px;
+            margin: 0 auto;
+        }
         .timer-display {
             font-size: 3rem;
             color: var(--neon-pink);
@@ -119,11 +152,20 @@
             padding: 20px;
             margin-top: 20px;
             color: var(--neon-pink);
+            background: rgba(255, 0, 255, 0.1);
+        }
+
+        @media (max-width: 600px) {
+            .timer-display { font-size: 2rem; }
+            .roulette-display { font-size: 1.5rem; }
         }
 
     </style>
 </head>
 <body>
+
+    <!-- ФОН (MATRIX RAIN) -->
+    anvas id="matrix"></canvas>
 
     <!-- ПАНЕЛЬ НАВИГАЦИИ -->
     <nav>
@@ -134,7 +176,7 @@
 
     <!-- СЕКЦИЯ 1: ЗАЛ СЛАВЫ -->
     <div id="hall" class="section active-section">
-        <h1 style="text-align:center; margin-bottom:40px; color:var(--neon-green)">DATABASE</h1>
+        <h1 style="text-align:center; margin-bottom:40px; color:var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">DATABASE</h1>
         <div class="gallery" id="gallery">
             <!-- JS заполнит это -->
         </div>
@@ -158,46 +200,81 @@
     <!-- СЕКЦИЯ 3: ТАЙМЕР -->
     <div id="timer" class="section">
         <div class="timer-container" onclick="handleTimerClick()">
-            <h1 style="color:#555">NEXT DROP</h1>
+            <h1 style="color:#888; letter-spacing: 5px;">NEXT DROP IN:</h1>
             <div class="timer-display" id="countdown">00:00:00</div>
-            <p id="hint" style="color:#333; margin-top:20px">>> CLICK 5 TIMES TO HACK</p>
+            <p id="hint" style="color:#555; margin-top:20px">>> CLICK 5 TIMES TO HACK SYSTEM</p>
             
             <div id="spoiler" class="spoiler-box">
-                СПОЙЛЕР: В новом выпуске... (Измени меня в коде)
+                <strong>ACCESS GRANTED:</strong><br>
+                В следующем выпуске... (Секретная информация)
             </div>
         </div>
     </div>
 
     <script>
+        // === 0. MATRIX RAIN SCRIPT ===
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+
+        function resizeMatrix() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeMatrix);
+        resizeMatrix();
+
+        const chars = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const charArray = chars.split('');
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        for(let x = 0; x < columns; x++) drops[x] = 1;
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0F0'; // Цвет дождя
+            ctx.font = fontSize + 'px monospace';
+
+            for(let i = 0; i < drops.length; i++) {
+                const text = charArray[Math.floor(Math.random() * charArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 33);
+
+
         // === 1. НАВИГАЦИЯ ===
         function showSection(id) {
-            // Скрыть все секции
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            
-            // Показать нужную
             document.getElementById(id).classList.add('active-section');
-            
-            // Подсветка кнопки (немного костыльно, но работает)
             event.target.classList.add('active');
         }
 
         // === 2. ЗАЛ СЛАВЫ (ДАННЫЕ) ===
+        // ТУТ МЕНЯЙ ДАННЫЕ ПОДПИСЧИКОВ
         const characters = [
             { name: "НИК_ПОДПИСЧИКА", episode: "#001", role: "PIONEER", img: "https://via.placeholder.com/300/000000/00ff00?text=USER" },
-            { name: "LOCKED", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" },
-            { name: "LOCKED", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" }
+            { name: "LOCKED SLOT", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" },
+            { name: "LOCKED SLOT", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" },
+             { name: "LOCKED SLOT", episode: "---", role: "WAITING", img: "https://via.placeholder.com/300/111/333?text=LOCKED" }
         ];
 
         const gallery = document.getElementById('gallery');
         characters.forEach(c => {
+            const isLocked = c.name.includes("LOCKED");
+            const colorStyle = isLocked ? "color:#555" : "color:white";
+            
             const div = document.createElement('div');
             div.className = 'card';
             div.innerHTML = `
-                <img src="${c.img}" class="card-img">
+                <img src="${c.img}" class="card-img" style="${isLocked ? 'filter:grayscale(100%) brightness(50%)' : ''}">
                 <div class="card-info">
-                    <h3 style="color:white">${c.name}</h3>
-                    <p style="color:#666">${c.episode} // ${c.role}</p>
+                    <h3 style="${colorStyle}">${c.name}</h3>
+                    <p style="color:#666; font-size:0.9rem">${c.episode} // ${c.role}</p>
                 </div>
             `;
             gallery.appendChild(div);
@@ -239,8 +316,7 @@
         }
 
         // === 4. ТАЙМЕР ===
-        // Дата следующего выпуска: (Год, Месяц-1, День, Час)
-        const dropDate = new Date(2025, 11, 5, 18).getTime(); 
+        const dropDate = new Date(2025, 11, 5, 18).getTime(); // (Год, Месяц-1, День, Час)
         
         setInterval(() => {
             const now = new Date().getTime();
@@ -264,62 +340,5 @@
             }
         }
     </script>
-    <!-- === MATRIX RAIN BACKGROUND === -->
-anvas id="matrix" style="position:fixed; top:0; left:0; z-index:-1; opacity:0.3;"></canvas>
-
-<script>
-    // MATRIX RAIN SCRIPT
-    const canvas = document.getElementById('matrix');
-    const ctx = canvas.getContext('2d');
-
-    // Устанавливаем размер во весь экран
-    function resizeMatrix() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    window.addEventListener('resize', resizeMatrix);
-    resizeMatrix();
-
-    // Символы: Катакана + Латиница + Цифры
-    const chars = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const charArray = chars.split('');
-    
-    const fontSize = 14;
-    const columns = canvas.width / fontSize; // Сколько колонок
-    
-    // Массив для капель (хранит позицию Y для каждой колонки)
-    const drops = [];
-    for(let x = 0; x < columns; x++) {
-        drops[x] = 1;
-    }
-
-    function drawMatrix() {
-        // Полупрозрачный черный фон для эффекта следа (trails)
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        ctx.fillStyle = '#0F0'; // Зеленый цвет текста (можно поменять на #00F3FF для голубого)
-        ctx.font = fontSize + 'px monospace';
-
-        for(let i = 0; i < drops.length; i++) {
-            // Выбираем случайный символ
-            const text = charArray[Math.floor(Math.random() * charArray.length)];
-            
-            // Рисуем символ
-            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-            // Если капля улетела вниз экрана, сбрасываем её наверх случайно
-            if(drops[i] * fontSize > canvas.height && Math.random() > 0.975)
-                drops[i] = 0;
-
-            // Двигаем каплю вниз
-            drops[i]++;
-        }
-    }
-
-    // Запуск анимации (30 кадров в секунду)
-    setInterval(drawMatrix, 33);
-</script>
 </body>
 </html>
-
