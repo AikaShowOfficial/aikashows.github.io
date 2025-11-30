@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIKA SHOW: HALL OF FAME</title>
+    <style>
+        :root {
+            --neon-green: #0f0;
+            --neon-pink: #f0f;
+            --bg-color: #050505;
+            --card-bg: #0a0a0a;
+            --text-primary: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        /* Эффект старого монитора (CRT Scanlines) */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 2px solid var(--neon-green);
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            text-shadow: 2px 2px var(--neon-pink);
+            letter-spacing: 5px;
+            animation: glitch 1s linear infinite;
+        }
+
+        .subtitle {
+            color: var(--neon-green);
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        /* Карточка персонажа */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-green);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+
+        .card-image-container {
+            width: 100%;
+            height: 250px;
+            background-color: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(120%);
+            transition: filter 0.3s;
+        }
+
+        .card:hover .card-image {
+            filter: grayscale(0%) contrast(100%);
+        }
+
+        .card-info {
+            padding: 20px;
+        }
+
+        .card-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .card-meta {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .badge {
+            background: var(--neon-pink);
+            color: black;
+            padding: 2px 8px;
+            font-weight: bold;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .description {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #ccc;
+        }
+
+        /* Кнопка-призыв */
+        .cta-section {
+            text-align: center;
+            margin-top: 60px;
+            margin-bottom: 40px;
+            z-index: 10;
+            position: relative;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            text-decoration: none;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        /* Анимация глюка */
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>AIKA DATABASE</h1>
+        <p class="subtitle">>> SYSTEM STATUS: ONLINE</p>
+        <p class="subtitle">>> LOADING LEGENDS...</p>
+    </header>
+
+    <div class="container" id="gallery">
+        <!-- Сюда JS будет вставлять карточки -->
+    </div>
+
+    <div class="cta-section">
+        <p style="margin-bottom: 20px;">ХОЧЕШЬ ПОПАСТЬ В БАЗУ?</p>
+        <a href="https://t.me/ТВОЙ_КАНАЛ" class="btn">ЗАГРУЗИТЬ ПЕРСОНАЖА</a>
+    </div>
+
+    <script>
+        // ==========================================
+        // ТВОЯ БАЗА ДАННЫХ (РЕДАКТИРУЙ ЗДЕСЬ)
+        // ==========================================
+        const characters = [
+            {
+                id: 1,
+                name: "НИКНЕЙМ_ПОДПИСЧИКА", 
+                episode: "EPISODE #001",
+                role: "ПЕРВОПРОХОДЕЦ",
+                desc: "Тот самый первый зритель, который взломал систему и прошел викторину. Легенда начала времен.",
+                // Вставь ссылку на фото персонажа ниже. Если фото нет, оставь заглушку.
+                image: "https://via.placeholder.com/400x400/000000/00ff00?text=GLITCH_USER" 
+            },
+            {
+                id: 2,
+                name: "LOCKED SLOT",
+                episode: "EPISODE #002",
+                role: "UNKNOWN",
+                desc: "Слот заблокирован. Ожидание загрузки данных из Телеграм канала...",
+                image: "https://via.placeholder.com/400x400/111111/333333?text=LOCKED"
+            },
+             {
+                id: 3,
+                name: "LOCKED SLOT",
+                episode: "EPISODE #002",
+                role: "UNKNOWN",
+                desc: "Слот заблокирован. Ожидание загрузки данных из Телеграм канала...",
+                image: "https://via.placeholder.com/400x400/111111/333333?text=LOCKED"
+            }
+        ];
+
+        // Логика отрисовки (Не трогай, если не знаешь JS)
+        const gallery = document.getElementById('gallery');
+
+        characters.forEach(char => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            // Проверка на "закрытый слот" для смены стиля
+            const isLocked = char.name === "LOCKED SLOT";
+            const badgeColor = isLocked ? 'background: #333; color: #777;' : '';
+
+            card.innerHTML = `
+                <div class="card-image-container">
+                    <img src="${char.image}" alt="${char.name}" class="card-image">
+                </div>
+                <div class="card-info">
+                    <div class="card-meta">
+                        <span>${char.episode}</span>
+                        <span class="badge" style="${badgeColor}">${char.role}</span>
+                    </div>
+                    <h3 class="card-name" style="${isLocked ? 'color: #555;' : ''}">${char.name}</h3>
+                    <p class="description">${char.desc}</p>
+                </div>
+            `;
+            gallery.appendChild(card);
+        });
+    </script>
+
+</body>
+</html>
