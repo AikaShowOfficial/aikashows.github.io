@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIKA ROULETTE // SYSTEM</title>
+    <style>
+        :root {
+            --neon-green: #0f0;
+            --neon-red: #f00;
+            --bg-color: #050505;
+            --panel-bg: #0a0a0a;
+            --text-primary: #e0e0e0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* CRT Scanlines */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .container {
+            z-index: 5;
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--neon-green);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--neon-green);
+            letter-spacing: 4px;
+        }
+
+        /* Input Area */
+        .input-area {
+            display: block;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: #111;
+            border: 2px solid #333;
+            color: var(--neon-green);
+            padding: 15px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+        }
+
+        textarea:focus { border-color: var(--neon-green); }
+
+        /* The Display Box */
+        .display-box {
+            background: #000;
+            border: 4px solid var(--neon-green);
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
+            display: none; /* Скрыт по умолчанию */
+        }
+
+        .current-name {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: white;
+            z-index: 10;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: var(--neon-green);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-green);
+        }
+
+        .btn:disabled {
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            background: transparent;
+        }
+
+        /* Winner Animation */
+        .winner-glow {
+            animation: flash 0.5s infinite alternate;
+            border-color: var(--neon-red);
+            box-shadow: 0 0 50px var(--neon-red);
+        }
+        
+        .winner-text {
+            color: var(--neon-red);
+            text-shadow: 2px 2px white;
+            transform: scale(1.2);
+        }
+
+        @keyframes flash {
+            from { opacity: 1; }
+            to { opacity: 0.8; }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-reset {
+            border-color: #555;
+            color: #888;
+            font-size: 1rem;
+            padding: 15px 20px;
+        }
+        .btn-reset:hover {
+            border-color: white;
+            color: white;
+            background: transparent;
+            box-shadow: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>AIKA_ROULETTE</h1>
+
+        <!-- Блок ввода данных -->
+        <div id="setupPanel" class="input-area">
+            <p style="margin-bottom: 10px; color: #888;">>> ВСТАВЬ СПИСОК НИКОВ (Каждый с новой строки):</p>
+            <textarea id="namesInput" placeholder="User1&#10;User2&#10;User3..."></textarea>
+        </div>
+
+        <!-- Блок анимации (Скрыт сначала) -->
+        <div id="displayBox" class="display-box">
+            <div id="targetName" class="current-name">READY?</div>
+        </div>
+
+        <div class="controls">
+            <button id="spinBtn" class="btn" onclick="startRoulette()">ЗАПУСК ПРОТОКОЛА</button>
+            <button id="resetBtn" class="btn btn-reset" onclick="resetRoulette()" style="display:none;">СБРОС</button>
+        </div>
+    </div>
+
+    <script>
+        // ЗВУКОВОЙ ДВИЖОК (Синтезатор браузера)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playBeep(frequency = 440, duration = 0.05, type = 'square') {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.type = type;
+            osc.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playWinSound() {
+            playBeep(600, 0.1, 'sawtooth');
+            setTimeout(() => playBeep(800, 0.2, 'sawtooth'), 100);
+            setTimeout(() => playBeep(1200, 0.6, 'square'), 300);
+        }
+
+        // ЛОГИКА РУЛЕТКИ
+        let names = [];
+        let isSpinning = false;
+        let animationId;
+
+        const setupPanel = document.getElementById('setupPanel');
+        const displayBox = document.getElementById('displayBox');
+        const targetName = document.getElementById('targetName');
+        const namesInput = document.getElementById('namesInput');
+        const spinBtn = document.getElementById('spinBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        function startRoulette() {
+            if (isSpinning) return;
+
+            // Получаем список
+            const rawText = namesInput.value.trim();
+            if (!rawText) {
+                alert("ОШИБКА: Список пуст!");
+                return;
+            }
+
+            names = rawText.split('\n').map(n => n.trim()).filter(n => n !== "");
+            
+            if (names.length < 2) {
+                alert("ОШИБКА: Нужно минимум 2 участника!");
+                return;
+            }
+
+            // Переключаем интерфейс
+            setupPanel.style.display = 'none';
+            displayBox.style.display = 'flex';
+            spinBtn.disabled = true;
+            spinBtn.innerText = "DECRYPTING...";
+            isSpinning = true;
+
+            let speed = 50; // Начальная скорость (мс)
+            let counter = 0;
+            let totalSpins = Math.floor(Math.random() * 30) + 50; // Сколько раз мелькнет перед остановкой (50-80)
+            
+            // Цикл анимации
+            function step() {
+                // Выбираем случайное имя для показа
+                const randomName = names[Math.floor(Math.random() * names.length)];
+                targetName.innerText = randomName;
+                playBeep(200 + Math.random() * 200, 0.05); // Звук тика
+
+                counter++;
+
+                if (counter < totalSpins) {
+                    // Замедляем в конце
+                    if (counter > totalSpins - 15) speed += 20;
+                    if (counter > totalSpins - 5) speed += 50;
+                    
+                    setTimeout(step, speed);
+                } else {
+                    // ФИНАЛ
+                    finalizeWinner(randomName);
+                }
+            }
+
+            step();
+        }
+
+        function finalizeWinner(winner) {
+            isSpinning = false;
+            targetName.innerText = winner;
+            
+            // Визуальные эффекты победы
+            displayBox.classList.add('winner-glow');
+            targetName.classList.add('winner-text');
+            playWinSound();
+
+            spinBtn.style.display = 'none';
+            resetBtn.style.display = 'inline-block';
+        }
+
+        function resetRoulette() {
+            // Сброс стилей
+            displayBox.classList.remove('winner-glow');
+            targetName.classList.remove('winner-text');
+            
+            // Сброс интерфейса
+            setupPanel.style.display = 'block';
+            displayBox.style.display = 'none';
+            spinBtn.style.display = 'inline-block';
+            resetBtn.style.display = 'none';
+            
+            spinBtn.disabled = false;
+            spinBtn.innerText = "ЗАПУСК ПРОТОКОЛА";
+        }
+    </script>
+</body>
+</html>
