@@ -3,156 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIKA TERMINAL</title>
+    <title>AIKA TERMINAL V2</title>
     <style>
         :root {
-            --neon-cyan: #00f3ff;
+            --neon-blue: #00f3ff;
+            --neon-pink: #bc13fe;
             --neon-yellow: #ffea00;
+            --screen-bg: #e0f7fa; /* Светло-голубой фон экрана как на картинке */
+            --body-bg: #050505;
+            --frame-color: #1a237e; /* Темно-синий корпус */
         }
 
+        * { box-sizing: border-box; }
+
         body {
-            background-color: #000;
+            background-color: var(--body-bg);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            font-family: 'Arial Black', sans-serif;
             overflow: hidden;
-            font-family: 'Impact', sans-serif; /* Шрифт для цифр */
         }
 
-        /* Контейнер, имитирующий размер терминала */
-        .machine-container {
+        /* КОРПУС ТЕРМИНАЛА */
+        .terminal-body {
+            background: var(--frame-color);
+            width: 400px;
+            padding: 20px;
+            border-radius: 30px;
+            border: 4px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0,0,0,0.5);
             position: relative;
-            width: 500px; /* Примерная ширина, подгоним */
-            height: 900px; /* Примерная высота */
-            /* ФОНОВАЯ КАРТИНКА ТЕРМИНАЛА */
-            /* Замени ссылку ниже на URL своей картинки в репозитории! */
-            /* Например: https://aikashowofficial.github.io/terminal_bg.jpg */
-            background-image: url('terminal_bg.jpg'); 
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        
-        /* Если картинки нет, покажем заглушку, чтобы ты видел где что */
-        .machine-container.no-bg {
-            background: #111;
-            border: 2px solid var(--neon-cyan);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        /* СЕТКА СЛОТОВ (Настраиваем позицию поверх экрана робота) */
-        .slots-grid {
+        /* ГОЛОВА РОБОТА (Декорация сверху) */
+        .robot-head {
+            width: 120px;
+            height: 80px;
+            background: #283593;
+            border: 3px solid var(--neon-blue);
+            border-radius: 15px;
             position: absolute;
-            top: 38%;    /* Подбираем на глаз по картинке */
-            left: 16%;
-            width: 68%;
-            height: 38%;
+            top: -90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+        /* Глаза робота */
+        .robot-eyes {
+            display: flex;
+            gap: 15px;
+        }
+        .eye {
+            width: 25px;
+            height: 25px;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+        /* Антенны */
+        .antenna {
+            position: absolute;
+            top: -30px;
+            width: 4px;
+            height: 30px;
+            background: gray;
+        }
+        .antenna.left { left: 20px; transform: rotate(-20deg); }
+        .antenna.right { right: 20px; transform: rotate(20deg); }
+        .antenna::after {
+            content: ''; position: absolute; top: -8px; left: -3px;
+            width: 10px; height: 10px; background: var(--neon-yellow); border-radius: 50%;
+            animation: blink 1s infinite alternate;
+        }
+
+        /* ЭКРАН СЛОТОВ */
+        .screen-container {
+            background: var(--screen-bg);
+            width: 100%;
+            border-radius: 15px;
+            padding: 10px;
+            border: 3px solid var(--neon-blue);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.5);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        /* ТАБЛО СЧЕТА */
+        .score-board {
+            background: #000;
+            color: var(--neon-blue);
+            font-family: 'Courier New', monospace;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 10px;
+            border: 1px solid var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue);
+            font-size: 1.2rem;
+        }
+
+        /* СЕТКА 3x3 */
+        .grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 5px;
-            /* background: rgba(0, 255, 255, 0.2); /* Временно включи для отладки */ 
+            gap: 8px;
         }
 
         .slot {
+            background: rgba(255, 255, 255, 0.6);
+            height: 80px;
+            border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.8rem;
-            text-transform: uppercase;
-            text-shadow: 2px 2px 0 #000;
-            user-select: none;
+            font-size: 1.5rem;
+            border: 2px solid transparent;
+            transition: 0.3s;
         }
 
-        /* Стили иконок (Текст вместо картинок пока) */
-        .item-500 { color: var(--neon-yellow); -webkit-text-stroke: 1px #b8860b; }
-        .item-error { color: red; background: black; padding: 2px; font-size: 1rem; border: 1px solid red; }
-        .item-mem { background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent; font-weight: bold; }
-        .item-ban { color: red; font-weight: bold; font-family: monospace; letter-spacing: 2px; background: white; color: red; padding: 0 5px; }
-        .item-safe { font-size: 2.5rem; } /* Эмодзи сейфа */
-
-        /* Анимация вращения */
-        .spinning .slot {
-            animation: blurText 0.1s infinite;
-            color: transparent !important;
-            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        /* Эффект победы для ячейки */
+        .slot.win {
+            background: #fff;
+            border-color: var(--neon-yellow);
+            box-shadow: 0 0 15px var(--neon-yellow);
+            transform: scale(1.05);
+            z-index: 2;
         }
 
-        @keyframes blurText {
-            0% { transform: translateY(-5px); }
-            50% { transform: translateY(5px); }
-            100% { transform: translateY(-5px); }
+        /* ПАНЕЛЬ УПРАВЛЕНИЯ (НИЗ) */
+        .control-panel {
+            width: 100%;
+            height: 80px;
+            background: #111;
+            border-top: 3px solid var(--neon-pink);
+            border-radius: 0 0 20px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            /* Декоративные кнопки слева */
+            background-image: radial-gradient(circle at 20% 50%, #333 5px, transparent 6px),
+                              radial-gradient(circle at 30% 50%, #333 5px, transparent 6px);
         }
 
-        /* КНОПКА (Невидимая зона поверх желтой кнопки на картинке) */
-        .trigger-btn {
-            position: absolute;
-            bottom: 8%;  /* Подбираем позицию */
-            right: 15%;
-            width: 12%;
-            height: 8%;
-            background: rgba(255, 255, 0, 0.0); /* Прозрачная */
-            cursor: pointer;
+        /* КНОПКА ЗАПУСКА (Желтая) */
+        .spin-btn {
+            width: 70px;
+            height: 50px;
+            background: var(--neon-yellow);
+            border: none;
             border-radius: 10px;
-            z-index: 10;
+            box-shadow: 0 5px 0 #b8860b, 0 0 15px var(--neon-yellow);
+            cursor: pointer;
+            position: relative;
+            transition: 0.1s;
         }
-        
-        /* Эффект нажатия */
-        .trigger-btn:active {
-            background: rgba(255, 255, 0, 0.3); 
+        .spin-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #b8860b, inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .spin-btn::after {
+            content: 'PUSH';
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #555;
         }
 
-        /* ТАБЛО С РЕЗУЛЬТАТОМ (Где синий экранчик сверху) */
-        .score-display {
-            position: absolute;
-            top: 29%;
-            left: 35%;
-            width: 30%;
+        /* --- СТИЛИ ИКОНОК --- */
+        .item-500 { 
+            color: var(--neon-yellow); 
+            text-shadow: 2px 2px 0 #000;
+            -webkit-text-stroke: 1px #b8860b; 
+        }
+        .item-error { 
+            color: white; 
+            background: red; 
+            padding: 5px; 
+            font-size: 0.8rem; 
+            border: 2px solid black; 
+            border-radius: 5px;
+            line-height: 1;
             text-align: center;
-            color: var(--neon-cyan);
-            font-family: monospace;
-            font-size: 1.2rem;
-            text-shadow: 0 0 5px var(--neon-cyan);
         }
+        .item-mem { 
+            background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); 
+            -webkit-background-clip: text; 
+            color: transparent; 
+            font-weight: 900; 
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+        }
+        .item-ban { 
+            color: red; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: bold; 
+            border: 2px solid red;
+            padding: 0 5px;
+            background: #fff;
+        }
+        .item-safe { font-size: 2.5rem; }
+        .item-x2 { color: #0f0; text-shadow: 2px 2px 0 #000; font-style: italic; }
 
+        @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <div class="machine-container">
-        <!-- ТАБЛО -->
-        <div class="score-display" id="score">CREDITS: 0</div>
-
-        <!-- СЕТКА СЛОТОВ -->
-        <div class="slots-grid" id="grid">
-            <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-            <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-            <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+    <!-- КОРПУС -->
+    <div class="terminal-body">
+        
+        <!-- ГОЛОВА РОБОТА -->
+        <div class="robot-head">
+            <div class="antenna left"></div>
+            <div class="antenna right"></div>
+            <div class="robot-eyes">
+                <div class="eye" style="background:#00f3ff"></div>
+                <div class="eye" style="background:#00f3ff"></div>
+            </div>
         </div>
 
-        <!-- КНОПКА ЗАПУСКА -->
-        <div class="trigger-btn" onclick="spin()" title="НАЖМИ МЕНЯ"></div>
+        <!-- ЭКРАН -->
+        <div class="screen-container">
+            <div class="score-board" id="score">CREDITS: 0</div>
+            
+            <div class="grid" id="grid">
+                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+            </div>
+        </div>
+
+        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
+        <div class="control-panel">
+            <div style="color:#555; font-size:0.8rem;">SYSTEM<br>READY</div>
+            <button class="spin-btn" onclick="spin()"></button>
+        </div>
+
     </div>
 
     <script>
-        // НАСТРОЙКИ ПРЕДМЕТОВ (Как на картинке)
+        // НАСТРОЙКИ ПРЕДМЕТОВ
         const ITEMS = [
             { id: '500', html: '<span class="item-500">500⚡</span>', val: 500 },
-            { id: '1000', html: '<span class="item-500">1000⚡</span>', val: 1000 },
-            { id: '404', html: '<div class="item-error">404<br>ERROR</div>', val: 0 },
+            { id: '1000', html: '<span class="item-500">1K⚡</span>', val: 1000 },
+            { id: '404', html: '<div class="item-error">404<br>ERR</div>', val: 0 },
             { id: 'MEM', html: '<span class="item-mem">MEM</span>', val: 50 },
             { id: 'BAN', html: '<span class="item-ban">БАН</span>', val: -100 },
-            { id: 'SAFE', html: '<span class="item-safe">🗄️</span>', val: 2000 } // Сейф
+            { id: 'SAFE', html: '<span class="item-safe">🗄️</span>', val: 2000 },
+            { id: 'X2', html: '<span class="item-x2">X2</span>', val: 0 } // Пока просто пустышка
         ];
 
         let isSpinning = false;
         let credits = 0;
-        const grid = document.getElementById('grid');
         const slots = document.querySelectorAll('.slot');
         const scoreEl = document.getElementById('score');
+        const btn = document.querySelector('.spin-btn');
 
-        // Заполняем случайно при старте
+        // Звуковой движок (простой писк)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function beep(freq = 600, dur = 0.1, type = 'square') {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+            osc.stop(audioCtx.currentTime + dur);
+        }
+
+        // Начальное заполнение
         slots.forEach(s => s.innerHTML = getRandomItem().html);
 
         function getRandomItem() {
@@ -162,50 +290,72 @@
         function spin() {
             if(isSpinning) return;
             isSpinning = true;
-            grid.classList.add('spinning'); // Эффект размытия
+            
+            // Анимация кнопки
+            btn.style.transform = "translateY(5px)";
+            btn.style.boxShadow = "0 0 0 #b8860b";
+            setTimeout(() => {
+                btn.style.transform = "";
+                btn.style.boxShadow = "";
+            }, 100);
 
-            // Простая анимация смены контента
+            // Сброс победной подсветки
+            slots.forEach(s => s.classList.remove('win'));
+
+            // Прокрутка
             let cycles = 0;
             const interval = setInterval(() => {
                 slots.forEach(s => s.innerHTML = getRandomItem().html);
+                beep(200 + Math.random()*200, 0.05); // Звук прокрутки
                 cycles++;
-                if(cycles > 15) { // Останавливаем через 15 тактов
+                if(cycles > 20) {
                     clearInterval(interval);
                     finalize();
                 }
-            }, 100);
+            }, 80);
         }
 
         function finalize() {
-            grid.classList.remove('spinning');
             isSpinning = false;
-
-            // Генерируем финальный расклад
-            const results = [];
             const counts = {};
+            const resultIds = [];
 
-            slots.forEach(slot => {
+            // Финальная генерация
+            slots.forEach((slot, index) => {
                 const item = getRandomItem();
                 slot.innerHTML = item.html;
-                results.push(item);
+                slot.dataset.id = item.id; // Сохраняем ID для проверки
                 counts[item.id] = (counts[item.id] || 0) + 1;
             });
 
-            // Проверка победы (5+ одинаковых)
-            let winAmount = 0;
-            for(let key in counts) {
-                if(counts[key] >= 5) {
-                    // Находим стоимость предмета
-                    const itemObj = ITEMS.find(i => i.id === key);
-                    winAmount = itemObj.val;
-                }
+            // Проверка на победу (5 и более)
+            let winId = null;
+            for(let id in counts) {
+                if(counts[id] >= 5) winId = id;
             }
 
-            if(winAmount !== 0) {
-                credits += winAmount;
-                scoreEl.innerText = `WIN: ${winAmount}`;
-                setTimeout(() => scoreEl.innerText = `CREDITS: ${credits}`, 2000);
-                // Тут можно добавить звук победы
+            if(winId) {
+                const winItem = ITEMS.find(i => i.id === winId);
+                const winAmount = winItem.val;
+                
+                if(winAmount !== 0) {
+                    credits += winAmount;
+                    scoreEl.innerText = `WIN: ${winAmount}`;
+                    scoreEl.style.color = "var(--neon-yellow)";
+                    
+                    // Подсветка победных слотов
+                    slots.forEach(s => {
+                        if(s.dataset.id === winId) s.classList.add('win');
+                    });
+
+                    beep(800, 0.1, 'sawtooth'); // Звук победы
+                    setTimeout(() => beep(1200, 0.2, 'sawtooth'), 100);
+
+                    setTimeout(() => {
+                        scoreEl.innerText = `CREDITS: ${credits}`;
+                        scoreEl.style.color = "var(--neon-blue)";
+                    }, 2000);
+                }
             }
         }
     </script>
