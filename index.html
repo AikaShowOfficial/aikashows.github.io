@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIKA TERMINAL V2</title>
+    <title>AIKA TERMINAL V3</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #bc13fe;
             --neon-yellow: #ffea00;
-            --screen-bg: #e0f7fa; /* Светло-голубой фон экрана как на картинке */
+            --screen-bg: #e0f7fa;
             --body-bg: #050505;
-            --frame-color: #1a237e; /* Темно-синий корпус */
+            --frame-color: #1a237e;
         }
 
         * { box-sizing: border-box; }
@@ -27,62 +27,46 @@
             overflow: hidden;
         }
 
-        /* КОРПУС ТЕРМИНАЛА */
         .terminal-body {
             background: var(--frame-color);
             width: 400px;
             padding: 20px;
             border-radius: 30px;
             border: 4px solid var(--neon-blue);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3), inset 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
+            transition: 0.3s;
+        }
+        /* Красная подсветка при БАНЕ */
+        .terminal-body.banned {
+            border-color: red;
+            box-shadow: 0 0 50px red;
+            filter: grayscale(0.5) sepia(1) hue-rotate(-50deg) saturate(5);
         }
 
-        /* ГОЛОВА РОБОТА (Декорация сверху) */
         .robot-head {
-            width: 120px;
-            height: 80px;
+            width: 120px; height: 80px;
             background: #283593;
             border: 3px solid var(--neon-blue);
             border-radius: 15px;
-            position: absolute;
-            top: -90px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: absolute; top: -90px;
+            display: flex; justify-content: center; align-items: center;
             box-shadow: 0 0 15px var(--neon-blue);
         }
-        /* Глаза робота */
-        .robot-eyes {
-            display: flex;
-            gap: 15px;
-        }
-        .eye {
-            width: 25px;
-            height: 25px;
-            background: var(--neon-cyan);
-            box-shadow: 0 0 10px var(--neon-cyan);
-        }
-        /* Антенны */
-        .antenna {
-            position: absolute;
-            top: -30px;
-            width: 4px;
-            height: 30px;
-            background: gray;
-        }
+        .robot-eyes { display: flex; gap: 15px; }
+        .eye { width: 25px; height: 25px; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); transition:0.3s; }
+        
+        /* Глаза при бане */
+        .banned .eye { background: red; box-shadow: 0 0 10px red; height: 5px; margin-top: 10px; }
+
+        .antenna { position: absolute; top: -30px; width: 4px; height: 30px; background: gray; }
         .antenna.left { left: 20px; transform: rotate(-20deg); }
         .antenna.right { right: 20px; transform: rotate(20deg); }
-        .antenna::after {
-            content: ''; position: absolute; top: -8px; left: -3px;
-            width: 10px; height: 10px; background: var(--neon-yellow); border-radius: 50%;
-            animation: blink 1s infinite alternate;
-        }
+        .antenna::after { content: ''; position: absolute; top: -8px; left: -3px; width: 10px; height: 10px; background: var(--neon-yellow); border-radius: 50%; animation: blink 1s infinite alternate; }
 
-        /* ЭКРАН СЛОТОВ */
         .screen-container {
             background: var(--screen-bg);
             width: 100%;
@@ -94,7 +78,6 @@
             position: relative;
         }
 
-        /* ТАБЛО СЧЕТА */
         .score-board {
             background: #000;
             color: var(--neon-blue);
@@ -104,209 +87,193 @@
             text-align: center;
             margin-bottom: 10px;
             border: 1px solid var(--neon-blue);
-            text-shadow: 0 0 5px var(--neon-blue);
             font-size: 1.2rem;
+            display: flex; justify-content: space-between;
         }
+        
+        /* Инвентарь для подарков */
+        .inventory { font-size: 1rem; }
 
-        /* СЕТКА 3x3 */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
         .slot {
             background: rgba(255, 255, 255, 0.6);
             height: 80px;
             border-radius: 8px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: flex; justify-content: center; align-items: center;
             font-size: 1.5rem;
             border: 2px solid transparent;
             transition: 0.3s;
+            overflow: hidden;
         }
+        .slot.win { background: #fff; border-color: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); transform: scale(1.05); z-index: 2; }
 
-        /* Эффект победы для ячейки */
-        .slot.win {
-            background: #fff;
-            border-color: var(--neon-yellow);
-            box-shadow: 0 0 15px var(--neon-yellow);
-            transform: scale(1.05);
-            z-index: 2;
-        }
-
-        /* ПАНЕЛЬ УПРАВЛЕНИЯ (НИЗ) */
         .control-panel {
-            width: 100%;
-            height: 80px;
+            width: 100%; height: 80px;
             background: #111;
             border-top: 3px solid var(--neon-pink);
             border-radius: 0 0 20px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            /* Декоративные кнопки слева */
-            background-image: radial-gradient(circle at 20% 50%, #333 5px, transparent 6px),
-                              radial-gradient(circle at 30% 50%, #333 5px, transparent 6px);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+            background-image: radial-gradient(circle at 20% 50%, #333 5px, transparent 6px), radial-gradient(circle at 30% 50%, #333 5px, transparent 6px);
         }
 
-        /* КНОПКА ЗАПУСКА (Желтая) */
         .spin-btn {
-            width: 70px;
-            height: 50px;
+            width: 70px; height: 50px;
             background: var(--neon-yellow);
-            border: none;
-            border-radius: 10px;
+            border: none; border-radius: 10px;
             box-shadow: 0 5px 0 #b8860b, 0 0 15px var(--neon-yellow);
-            cursor: pointer;
-            position: relative;
-            transition: 0.1s;
+            cursor: pointer; position: relative; transition: 0.1s;
         }
-        .spin-btn:active {
-            transform: translateY(5px);
-            box-shadow: 0 0 0 #b8860b, inset 0 0 10px rgba(0,0,0,0.5);
+        .spin-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #b8860b; }
+        .spin-btn::after { content: 'PUSH'; font-size: 0.7rem; font-weight: bold; color: #555; }
+        .spin-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; color: #888; }
+
+        /* ВСПЛЫВАЮЩИЙ МЕМ */
+        .meme-popup {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 300px;
+            background: white;
+            border: 4px solid black;
+            padding: 10px;
+            z-index: 100;
+            text-align: center;
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 0 100vw rgba(0,0,0,0.8);
         }
-        .spin-btn::after {
-            content: 'PUSH';
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #555;
-        }
+        .meme-popup.show { transform: translate(-50%, -50%) scale(1); }
+        .meme-img { width: 100%; image-rendering: pixelated; }
+        .close-meme { margin-top: 10px; background: black; color: white; border: none; padding: 5px 10px; cursor: pointer; font-family: inherit; }
 
         /* --- СТИЛИ ИКОНОК --- */
-        .item-500 { 
-            color: var(--neon-yellow); 
-            text-shadow: 2px 2px 0 #000;
-            -webkit-text-stroke: 1px #b8860b; 
-        }
-        .item-error { 
-            color: white; 
-            background: red; 
-            padding: 5px; 
-            font-size: 0.8rem; 
-            border: 2px solid black; 
-            border-radius: 5px;
-            line-height: 1;
-            text-align: center;
-        }
-        .item-mem { 
-            background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); 
-            -webkit-background-clip: text; 
-            color: transparent; 
-            font-weight: 900; 
-            font-size: 1.2rem;
-            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
-        }
-        .item-ban { 
-            color: red; 
-            font-family: 'Courier New', Courier, monospace; 
-            font-weight: bold; 
-            border: 2px solid red;
-            padding: 0 5px;
-            background: #fff;
-        }
-        .item-safe { font-size: 2.5rem; }
-        .item-x2 { color: #0f0; text-shadow: 2px 2px 0 #000; font-style: italic; }
+        .item-500 { color: var(--neon-yellow); text-shadow: 2px 2px 0 #000; -webkit-text-stroke: 1px #b8860b; }
+        .item-error { color: white; background: red; padding: 5px; font-size: 0.8rem; border: 2px solid black; border-radius: 5px; line-height: 1; text-align: center; }
+        .item-mem { background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent; font-weight: 900; font-size: 1.2rem; }
+        .item-ban { color: red; font-family: 'Courier New', Courier, monospace; font-weight: bold; border: 2px solid red; padding: 0 5px; background: #fff; }
+        .item-gift { font-size: 2.5rem; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3)); }
+        .item-x2 { color: #0f0; text-shadow: 2px 2px 0 #000; font-style: italic; font-size: 2rem; }
 
         @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <!-- КОРПУС -->
-    <div class="terminal-body">
+    <div class="terminal-body" id="terminal">
         
-        <!-- ГОЛОВА РОБОТА -->
         <div class="robot-head">
             <div class="antenna left"></div>
             <div class="antenna right"></div>
             <div class="robot-eyes">
-                <div class="eye" style="background:#00f3ff"></div>
-                <div class="eye" style="background:#00f3ff"></div>
+                <div class="eye"></div><div class="eye"></div>
             </div>
         </div>
 
-        <!-- ЭКРАН -->
         <div class="screen-container">
-            <div class="score-board" id="score">CREDITS: 0</div>
+            <div class="score-board">
+                <span id="score">CREDITS: 0</span>
+                <span class="inventory" id="inventory"></span>
+            </div>
             
             <div class="grid" id="grid">
+                <!-- Слоты -->
                 <div class="slot"></div><div class="slot"></div><div class="slot"></div>
                 <div class="slot"></div><div class="slot"></div><div class="slot"></div>
                 <div class="slot"></div><div class="slot"></div><div class="slot"></div>
             </div>
         </div>
 
-        <!-- ПАНЕЛЬ УПРАВЛЕНИЯ -->
         <div class="control-panel">
-            <div style="color:#555; font-size:0.8rem;">SYSTEM<br>READY</div>
+            <div style="color:#555; font-size:0.8rem;" id="statusText">SYSTEM<br>READY</div>
             <button class="spin-btn" onclick="spin()"></button>
+        </div>
+
+        <!-- Всплывающее окно для МЕМА -->
+        <div class="meme-popup" id="memePopup">
+            <h3 style="margin:0 0 10px;">RARE MEME FOUND!</h3>
+            <img src="" class="meme-img" id="memeImg">
+            <button class="close-meme" onclick="closeMeme()">OK LOL</button>
         </div>
 
     </div>
 
     <script>
-        // НАСТРОЙКИ ПРЕДМЕТОВ
-        const ITEMS = [
-            { id: '500', html: '<span class="item-500">500⚡</span>', val: 500 },
-            { id: '1000', html: '<span class="item-500">1K⚡</span>', val: 1000 },
-            { id: '404', html: '<div class="item-error">404<br>ERR</div>', val: 0 },
-            { id: 'MEM', html: '<span class="item-mem">MEM</span>', val: 50 },
-            { id: 'BAN', html: '<span class="item-ban">БАН</span>', val: -100 },
-            { id: 'SAFE', html: '<span class="item-safe">🗄️</span>', val: 2000 },
-            { id: 'X2', html: '<span class="item-x2">X2</span>', val: 0 } // Пока просто пустышка
+        // === ДАННЫЕ ===
+        // Ссылки на пиксельные мемы (заглушки, можно поменять на свои)
+        const MEME_URLS = [
+            "https://media.tenor.com/GfSX-LV7jP4AAAAi/cat-cat-meme.gif", // Cat
+            "https://media.tenor.com/g42-vR9s3p4AAAAi/nyan-cat-poptart-cat.gif", // Nyan
+            "https://media.tenor.com/262I127u2Z4AAAAi/doge-meme.gif" // Doge
         ];
 
-        let isSpinning = false;
-        let credits = 0;
+        const ITEMS = [
+            { id: '500', html: '<span class="item-500">500⚡</span>', type: 'score', val: 500 },
+            { id: '1000', html: '<span class="item-500">1K⚡</span>', type: 'score', val: 1000 },
+            { id: 'MEM', html: '<span class="item-mem">MEM</span>', type: 'meme', val: 0 },
+            { id: 'BAN', html: '<span class="item-ban">БАН</span>', type: 'ban', val: 0 },
+            { id: 'GIFT', html: '<span class="item-gift">🎁</span>', type: 'gift', val: 0 }, // Подарок
+            { id: 'X2', html: '<span class="item-x2">X2</span>', type: 'multi', val: 0 }
+        ];
+
+        // Состояние игры
+        let state = {
+            credits: 1000, // Стартовый баланс, чтобы было что удваивать
+            gifts: 0,
+            isSpinning: false,
+            isBanned: false
+        };
+
+        // DOM Элементы
         const slots = document.querySelectorAll('.slot');
         const scoreEl = document.getElementById('score');
+        const invEl = document.getElementById('inventory');
         const btn = document.querySelector('.spin-btn');
+        const terminal = document.getElementById('terminal');
+        const statusText = document.getElementById('statusText');
+        const memePopup = document.getElementById('memePopup');
+        const memeImg = document.getElementById('memeImg');
 
-        // Звуковой движок (простой писк)
+        // Звук
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function beep(freq = 600, dur = 0.1, type = 'square') {
+        function beep(freq=600, dur=0.1, type='square') {
             if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.value = freq;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            osc.type = type; osc.frequency.value = freq;
+            osc.connect(gain); gain.connect(audioCtx.destination);
             osc.start();
             gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
             osc.stop(audioCtx.currentTime + dur);
         }
 
-        // Начальное заполнение
+        // Инит
+        updateUI();
         slots.forEach(s => s.innerHTML = getRandomItem().html);
 
         function getRandomItem() {
             return ITEMS[Math.floor(Math.random() * ITEMS.length)];
         }
 
-        function spin() {
-            if(isSpinning) return;
-            isSpinning = true;
-            
-            // Анимация кнопки
-            btn.style.transform = "translateY(5px)";
-            btn.style.boxShadow = "0 0 0 #b8860b";
-            setTimeout(() => {
-                btn.style.transform = "";
-                btn.style.boxShadow = "";
-            }, 100);
+        function updateUI() {
+            scoreEl.innerText = `CREDITS: ${state.credits}`;
+            // Отображаем подарки как иконки
+            invEl.innerText = "🎁".repeat(state.gifts);
+        }
 
-            // Сброс победной подсветки
+        function spin() {
+            if(state.isSpinning || state.isBanned) return;
+            state.isSpinning = true;
+
+            // Анимация нажатия
+            btn.style.transform = "translateY(5px)";
+            setTimeout(() => btn.style.transform = "", 100);
+
             slots.forEach(s => s.classList.remove('win'));
 
-            // Прокрутка
             let cycles = 0;
             const interval = setInterval(() => {
                 slots.forEach(s => s.innerHTML = getRandomItem().html);
-                beep(200 + Math.random()*200, 0.05); // Звук прокрутки
+                beep(200, 0.05);
                 cycles++;
                 if(cycles > 20) {
                     clearInterval(interval);
@@ -316,19 +283,19 @@
         }
 
         function finalize() {
-            isSpinning = false;
+            state.isSpinning = false;
             const counts = {};
-            const resultIds = [];
+            const resultItems = [];
 
-            // Финальная генерация
-            slots.forEach((slot, index) => {
+            // Генерируем результат
+            slots.forEach((slot) => {
                 const item = getRandomItem();
                 slot.innerHTML = item.html;
-                slot.dataset.id = item.id; // Сохраняем ID для проверки
+                slot.dataset.id = item.id;
                 counts[item.id] = (counts[item.id] || 0) + 1;
             });
 
-            // Проверка на победу (5 и более)
+            // ПРОВЕРКА НА ПОБЕДУ (5+)
             let winId = null;
             for(let id in counts) {
                 if(counts[id] >= 5) winId = id;
@@ -336,28 +303,84 @@
 
             if(winId) {
                 const winItem = ITEMS.find(i => i.id === winId);
-                const winAmount = winItem.val;
                 
-                if(winAmount !== 0) {
-                    credits += winAmount;
-                    scoreEl.innerText = `WIN: ${winAmount}`;
-                    scoreEl.style.color = "var(--neon-yellow)";
-                    
-                    // Подсветка победных слотов
-                    slots.forEach(s => {
-                        if(s.dataset.id === winId) s.classList.add('win');
-                    });
+                // Подсветка
+                slots.forEach(s => {
+                    if(s.dataset.id === winId) s.classList.add('win');
+                });
 
-                    beep(800, 0.1, 'sawtooth'); // Звук победы
-                    setTimeout(() => beep(1200, 0.2, 'sawtooth'), 100);
-
-                    setTimeout(() => {
-                        scoreEl.innerText = `CREDITS: ${credits}`;
-                        scoreEl.style.color = "var(--neon-blue)";
-                    }, 2000);
-                }
+                beep(800, 0.1, 'sawtooth');
+                handleWin(winItem);
             }
         }
+
+        function handleWin(item) {
+            const type = item.type;
+            
+            if(type === 'score') {
+                state.credits += item.val;
+                statusText.innerHTML = `WIN!<br>+${item.val}`;
+            }
+            
+            else if(type === 'multi') {
+                state.credits *= 2;
+                statusText.innerHTML = `LUCKY!<br>X2 MULTI`;
+                beep(1200, 0.3, 'square');
+            }
+            
+            else if(type === 'gift') {
+                state.gifts++;
+                statusText.innerHTML = `WOW!<br>GIFT +1`;
+                beep(1500, 0.3, 'sine');
+            }
+            
+            else if(type === 'ban') {
+                applyBan();
+            }
+            
+            else if(type === 'meme') {
+                showMeme();
+            }
+
+            updateUI();
+        }
+
+        function applyBan() {
+            state.isBanned = true;
+            terminal.classList.add('banned');
+            statusText.innerHTML = `SYSTEM<br>BANNED`;
+            statusText.style.color = "red";
+            btn.disabled = true;
+            
+            // Звук ошибки
+            beep(150, 0.5, 'sawtooth');
+            
+            // Разбан через 5 секунд
+            let countdown = 5;
+            const timer = setInterval(() => {
+                countdown--;
+                statusText.innerHTML = `WAIT<br>${countdown}s`;
+                if(countdown <= 0) {
+                    clearInterval(timer);
+                    state.isBanned = false;
+                    terminal.classList.remove('banned');
+                    statusText.innerHTML = `SYSTEM<br>READY`;
+                    statusText.style.color = "#555";
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function showMeme() {
+            const randomMeme = MEME_URLS[Math.floor(Math.random() * MEME_URLS.length)];
+            memeImg.src = randomMeme;
+            memePopup.classList.add('show');
+        }
+
+        function closeMeme() {
+            memePopup.classList.remove('show');
+        }
+
     </script>
 </body>
 </html>
