@@ -9,365 +9,94 @@
             --neon-blue: #00f3ff;
             --neon-pink: #bc13fe;
             --neon-yellow: #ffea00;
-            --bg-dark: #050505;
-            --letter-bg: #222;
-            --letter-active: #fff;
+            --screen-bg: #e0f7fa;
+            --body-bg: #050505;
+            --frame-color: #1a237e;
         }
 
         * { box-sizing: border-box; }
+
         body {
-            background-color: var(--bg-dark);
-            font-family: 'Courier New', monospace;
-            color: white;
+            background-color: var(--body-bg);
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow-x: hidden;
+            font-family: 'Arial Black', sans-serif;
         }
 
-        /* --- 1. ВЕРХНЯЯ ЧАСТЬ: СЛОВО --- */
-        .game-area {
-            width: 100%;
-            padding: 20px;
-            text-align: center;
-            background: #111;
-            border-bottom: 2px solid var(--neon-blue);
-            margin-bottom: 30px;
-        }
-
-        h1 { color: var(--neon-pink); margin: 0 0 20px 0; text-shadow: 0 0 10px var(--neon-pink); }
-        
-        .hint-text { color: #aaa; margin-bottom: 20px; font-size: 1.2rem; font-style: italic; }
-
-        .word-container {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .letter-box {
-            width: 60px; height: 80px;
-            background: var(--letter-bg);
-            border: 2px solid #444;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3rem;
-            color: transparent; /* Буква скрыта */
-            transition: 0.3s;
-            cursor: default;
-        }
-        
-        .letter-box.revealed {
-            background: var(--neon-blue);
-            color: black;
-            border-color: white;
-            box-shadow: 0 0 20px var(--neon-blue);
-            transform: rotateY(360deg); /* Анимация переворота */
-            transition: 0.6s;
-        }
-
-        /* КЛАВИАТУРА (Всплывает когда можно угадать) */
-        .keyboard {
-            display: none; /* Скрыта по умолчанию */
+        /* ЗАГАДАННОЕ СЛОВО (НОВЫЙ БЛОК) */
+        .word-display {
             margin-top: 20px;
-            gap: 5px;
-            flex-wrap: wrap;
-            justify-content: center;
-            max-width: 600px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #111;
+            border: 2px solid var(--neon-yellow);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 234, 0, 0.2);
         }
-        .keyboard.active { display: flex; }
-        
-        .key-btn {
-            background: #333;
-            border: 1px solid #555;
+        .letter-box {
+            width: 50px; height: 60px;
+            background: #222;
+            border-bottom: 4px solid white;
             color: white;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-size: 1.2rem;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2rem;
             text-transform: uppercase;
         }
-        .key-btn:hover { background: #555; }
-        .key-btn.used { opacity: 0.3; cursor: not-allowed; background: black; }
-
-        /* СТАТУС ХОДА */
-        .turn-status {
-            margin-top: 15px;
-            font-size: 1.5rem;
-            color: var(--neon-yellow);
-            height: 30px;
+        .letter-box.solved {
+            background: var(--neon-blue);
+            color: black;
+            border-color: var(--neon-blue);
+            animation: pop 0.3s;
         }
 
-
-        /* --- 2. НИЖНЯЯ ЧАСТЬ: ТЕРМИНАЛ (Скопирован с улучшением масштаба) --- */
-        .terminal-wrapper {
-            transform: scale(0.8); /* Чуть уменьшим, чтобы влезло */
-            margin-top: -20px;
-        }
-
-        /* (Сюда вставляем CSS терминала из прошлого ответа, сокращенно) */
+        /* ТЕРМИНАЛ (СТАРЫЙ) */
         .terminal-body {
-            background: #1a237e; width: 400px; padding: 20px; border-radius: 30px;
-            border: 4px solid var(--neon-blue); box-shadow: 0 0 30px rgba(0,243,255,0.3);
-            position: relative; display: flex; flex-direction: column; align-items: center;
+            background: var(--frame-color);
+            width: 400px;
+            padding: 20px;
+            border-radius: 30px;
+            border: 4px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: 0.3s;
         }
-        .terminal-body.banned { border-color: red; filter: grayscale(1); pointer-events: none; }
-        
-        .screen-container { background: #e0f7fa; width: 100%; border-radius: 15px; padding: 10px; border: 3px solid var(--neon-blue); margin-bottom: 20px; }
+        .terminal-body.banned { border-color: red; box-shadow: 0 0 50px red; filter: grayscale(0.5) sepia(1) hue-rotate(-50deg) saturate(5); }
+
+        .robot-head {
+            width: 120px; height: 80px; background: #283593; border: 3px solid var(--neon-blue); border-radius: 15px;
+            position: absolute; top: -90px; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 15px var(--neon-blue);
+        }
+        .robot-eyes { display: flex; gap: 15px; }
+        .eye { width: 25px; height: 25px; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); transition:0.3s; }
+        .banned .eye { background: red; height: 5px; margin-top: 10px; }
+
+        .antenna { position: absolute; top: -30px; width: 4px; height: 30px; background: gray; }
+        .antenna.left { left: 20px; transform: rotate(-20deg); }
+        .antenna.right { right: 20px; transform: rotate(20deg); }
+        .antenna::after { content: ''; position: absolute; top: -8px; left: -3px; width: 10px; height: 10px; background: var(--neon-yellow); border-radius: 50%; }
+
+        .screen-container {
+            background: var(--screen-bg);
+            width: 100%; border-radius: 15px; padding: 10px;
+            border: 3px solid var(--neon-blue);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .score-board {
+            background: #000; color: var(--neon-blue);
+            font-family: 'Courier New', monospace; padding: 5px 10px; border-radius: 5px;
+            text-align: center; margin-bottom: 10px; border: 1px solid var(--neon-blue);
+            font-size: 1rem; display: flex; justify-content: space-between;
+        }
+
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .slot { background: rgba(255,255,255,0.6); height: 70px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
-        .slot.win { background: #fff; border-color: var(--neon-yellow); transform: scale(1.05); box-shadow: 0 0 15px gold; }
-        
-        .spin-btn { width: 100%; height: 50px; background: var(--neon-yellow); border: none; border-radius: 10px; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
-        .spin-btn:disabled { background: #555; cursor: not-allowed; }
-
-        /* Иконки */
-        .item-500 { color: #ffea00; -webkit-text-stroke: 1px #b8860b; font-weight:900; font-size:1.3rem;}
-        .item-err { background: red; color: white; padding: 2px; font-size: 0.7rem; }
-        .item-ban { color: red; border: 2px solid red; background: white; font-weight: bold; }
-
-    </style>
-</head>
-<body>
-
-    <!-- ЗОНА ИГРЫ -->
-    <div class="game-area">
-        <h1>WORD HACKER</h1>
-        <div class="hint-text" id="hint">ЗАГАДКА: Главный инструмент программиста?</div>
-        
-        <!-- Слово -->
-        <div class="word-container" id="wordDisplay">
-            <!-- Буквы генерятся JS -->
-        </div>
-
-        <div class="turn-status" id="status">КРУТИ БАРАБАН!</div>
-
-        <!-- Клавиатура -->
-        <div class="keyboard" id="keyboard">
-            <!-- Кнопки генерятся JS -->
-        </div>
-    </div>
-
-    <!-- ТЕРМИНАЛ -->
-    <div class="terminal-wrapper">
-        <div class="terminal-body" id="terminal">
-            <!-- Экран -->
-            <div class="screen-container">
-                <div class="grid" id="grid">
-                    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-                    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-                    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-                </div>
-            </div>
-            
-            <button class="spin-btn" onclick="spin()">ВЗЛОМАТЬ СИСТЕМУ</button>
-        </div>
-    </div>
-
-    <script>
-        // === КОНФИГ ИГРЫ ===
-        const WORD = "КЛАВИАТУРА"; // Загаданное слово
-        const HINT = "Что ты топчешь пальцами?";
-        
-        const ITEMS = [
-            { id: 'TURN', html: '<span class="item-500">ХОД</span>', type: 'turn' },      // Выпало право хода
-            { id: 'SCORE', html: '<span class="item-500">+500</span>', type: 'score' },    // Очки
-            { id: 'BAN', html: '<span class="item-ban">БАН</span>', type: 'ban' },        // Пропуск
-            { id: 'GIFT', html: '🎁', type: 'gift' },
-            { id: 'EMPTY', html: '---', type: 'empty' }
-        ];
-
-        // Перевешиваем шансы (чтобы БАН падал реже)
-        // В массиве больше 'TURN' и 'EMPTY', меньше 'BAN'
-        const POOL = [
-            ...Array(10).fill(ITEMS[0]), // 10 шансов на ХОД
-            ...Array(5).fill(ITEMS[1]),  // 5 шансов на ОЧКИ
-            ...Array(8).fill(ITEMS[4]),  // 8 пустышек
-            ITEMS[2], ITEMS[2],          // 2 БАНА
-            ITEMS[3]                     // 1 ПОДАРОК
-        ];
-
-        let gameState = {
-            openedLetters: [],
-            isSpinning: false,
-            canGuess: false
-        };
-
-        // === ИНИЦИАЛИЗАЦИЯ ===
-        document.getElementById('hint').innerText = `ПОДСКАЗКА: ${HINT}`;
-        
-        // 1. Рисуем слово
-        const wordContainer = document.getElementById('wordDisplay');
-        const letters = WORD.split('');
-        
-        letters.forEach((char, index) => {
-            const div = document.createElement('div');
-            div.className = 'letter-box';
-            div.dataset.char = char;
-            div.id = `letter-${index}`;
-            wordContainer.appendChild(div);
-        });
-
-        // 2. Рисуем клавиатуру
-        const kbd = document.getElementById('keyboard');
-        const alphabet = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-        alphabet.split('').forEach(char => {
-            const btn = document.createElement('button');
-            btn.className = 'key-btn';
-            btn.innerText = char;
-            btn.onclick = () => guessLetter(char, btn);
-            kbd.appendChild(btn);
-        });
-
-        // 3. Заполняем слоты начально
-        const slots = document.querySelectorAll('.slot');
-        slots.forEach(s => s.innerHTML = getRandomItem().html);
-
-
-        // === ЛОГИКА ===
-        function getRandomItem() {
-            return POOL[Math.floor(Math.random() * POOL.length)];
-        }
-
-        function spin() {
-            if(gameState.isSpinning || gameState.canGuess) return;
-            gameState.isSpinning = true;
-            document.getElementById('status').innerText = "ВЫЧИСЛЕНИЕ...";
-            document.getElementById('status').style.color = "var(--neon-blue)";
-
-            // Анимация
-            let cycles = 0;
-            const interval = setInterval(() => {
-                slots.forEach(s => s.innerHTML = getRandomItem().html);
-                cycles++;
-                if(cycles > 15) {
-                    clearInterval(interval);
-                    finalizeSpin();
-                }
-            }, 80);
-        }
-
-        function finalizeSpin() {
-            gameState.isSpinning = false;
-            
-            // Для простоты: считаем, что выпало то, чего больше всего на экране
-            // Или просто рандомим результат события
-            const result = POOL[Math.floor(Math.random() * POOL.length)]; // Упрощенная логика "колеса"
-            
-            // Показываем результат на всех слотах для эффекта
-            slots.forEach(s => s.innerHTML = result.html);
-
-            handleResult(result);
-        }
-
-        function handleResult(item) {
-            const status = document.getElementById('status');
-            
-            if(item.type === 'turn' || item.type === 'score') {
-                status.innerText = "БУКВА! ВЫБИРАЙ НА КЛАВИАТУРЕ";
-                status.style.color = "#0f0";
-                enableKeyboard(true);
-            } 
-            else if (item.type === 'ban') {
-                status.innerText = "БАН! ПРОПУСК ХОДА";
-                status.style.color = "red";
-                // Блокировка на 2 сек
-                setTimeout(() => { status.innerText = "КРУТИ ЕЩЕ РАЗ"; status.style.color = "yellow"; }, 2000);
-            }
-            else if (item.type === 'gift') {
-                status.innerText = "ПРИЗ! ОТКРЫВАЮ БУКВУ!";
-                // Открываем случайную закрытую букву
-                openRandomLetter();
-            }
-            else {
-                status.innerText = "ПУСТО... КРУТИ СНОВА";
-                status.style.color = "#aaa";
-            }
-        }
-
-        function enableKeyboard(enable) {
-            gameState.canGuess = enable;
-            const kbd = document.getElementById('keyboard');
-            if(enable) kbd.classList.add('active');
-            else kbd.classList.remove('active');
-        }
-
-        function guessLetter(char, btn) {
-            if(!gameState.canGuess) return;
-            
-            btn.classList.add('used');
-            btn.disabled = true;
-            
-            let found = false;
-            // Проверяем букву
-            letters.forEach((l, i) => {
-                if(l === char) {
-                    const box = document.getElementById(`letter-${i}`);
-                    box.innerText = char;
-                    box.classList.add('revealed');
-                    gameState.openedLetters.push(i);
-                    found = true;
-                }
-            });
-
-            const status = document.getElementById('status');
-            if(found) {
-                status.innerText = "ЕСТЬ ТАКАЯ БУКВА!";
-                checkWin();
-            } else {
-                status.innerText = "НЕТ ТАКОЙ БУКВЫ...";
-            }
-
-            // Завершаем ход
-            enableKeyboard(false);
-            
-            // Если не выиграл, даем крутить дальше
-            if(gameState.openedLetters.length < letters.length) {
-                 setTimeout(() => { 
-                     if(!gameState.isSpinning) status.innerText = "КРУТИ ДАЛЬШЕ"; 
-                 }, 1500);
-            }
-        }
-
-        function openRandomLetter() {
-            // Находим индексы закрытых букв
-            let closedIndices = [];
-            letters.forEach((_, i) => {
-                if(!gameState.openedLetters.includes(i)) closedIndices.push(i);
-            });
-
-            if(closedIndices.length > 0) {
-                const randIndex = closedIndices[Math.floor(Math.random() * closedIndices.length)];
-                const char = letters[randIndex];
-                
-                const box = document.getElementById(`letter-${randIndex}`);
-                box.innerText = char;
-                box.classList.add('revealed');
-                gameState.openedLetters.push(randIndex);
-                checkWin();
-            }
-        }
-
-        function checkWin() {
-            // Уникальные буквы в слове
-            const uniqueChars = new Set(letters).size;
-            // Мы не можем просто сравнить длину, так как одна буква может встречаться 2 раза
-            // Проще проверить, есть ли закрытые блоки
-            const allRevealed = Array.from(document.querySelectorAll('.letter-box')).every(b => b.classList.contains('revealed'));
-            
-            if(allRevealed) {
-                document.getElementById('status').innerText = "ПОБЕДА! СИСТЕМА ВЗЛОМАНА!";
-                document.getElementById('status').style.color = "var(--neon-pink)";
-                document.querySelector('.spin-btn').disabled = true;
-                
-                // Фейерверк или эффект
-                document.body.style.background = "#220022";
-            }
-        }
-
-    </script>
-</body>
-</html>
+        .slot {
