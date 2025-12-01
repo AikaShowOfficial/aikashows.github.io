@@ -3,308 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIKA MINER // SLOTS</title>
+    <title>AIKA TERMINAL</title>
     <style>
         :root {
+            --neon-cyan: #00f3ff;
             --neon-yellow: #ffea00;
-            --neon-blue: #00f3ff;
-            --neon-purple: #bc13fe;
-            --bg-color: #050505;
-            --panel-bg: #111;
-            --text-primary: #e0e0e0;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            font-family: 'Courier New', Courier, monospace;
-            min-height: 100vh;
+            background-color: #000;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
             overflow: hidden;
+            font-family: 'Impact', sans-serif; /* Шрифт для цифр */
         }
 
-        /* ФОНОВАЯ СЕТКА */
-        body::before {
-            content: "";
+        /* Контейнер, имитирующий размер терминала */
+        .machine-container {
+            position: relative;
+            width: 500px; /* Примерная ширина, подгоним */
+            height: 900px; /* Примерная высота */
+            /* ФОНОВАЯ КАРТИНКА ТЕРМИНАЛА */
+            /* Замени ссылку ниже на URL своей картинки в репозитории! */
+            /* Например: https://aikashowofficial.github.io/terminal_bg.jpg */
+            background-image: url('terminal_bg.jpg'); 
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        /* Если картинки нет, покажем заглушку, чтобы ты видел где что */
+        .machine-container.no-bg {
+            background: #111;
+            border: 2px solid var(--neon-cyan);
+        }
+
+        /* СЕТКА СЛОТОВ (Настраиваем позицию поверх экрана робота) */
+        .slots-grid {
             position: absolute;
-            width: 200%; height: 200%;
-            background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transform: perspective(500px) rotateX(60deg);
-            z-index: -1;
-            top: -50%;
-            animation: gridMove 10s linear infinite;
-        }
-
-        @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0); } 100% { transform: perspective(500px) rotateX(60deg) translateY(40px); } }
-
-        .container {
-            background: rgba(0,0,0,0.8);
-            padding: 30px;
-            border: 2px solid var(--neon-blue);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
-            border-radius: 10px;
-            text-align: center;
-            max-width: 500px;
-            width: 95%;
-        }
-
-        h1 { color: var(--neon-blue); margin-bottom: 20px; letter-spacing: 3px; text-shadow: 0 0 10px var(--neon-blue); }
-
-        /* СЧЕТ */
-        .score-board {
-            background: #000;
-            border: 1px solid #333;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-            color: var(--neon-yellow);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* СЛОТЫ (СЕТКА 3x3) */
-        .slot-machine {
+            top: 38%;    /* Подбираем на глаз по картинке */
+            left: 16%;
+            width: 68%;
+            height: 38%;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            background: #000;
-            padding: 15px;
-            border: 2px solid #333;
-            margin-bottom: 20px;
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            /* background: rgba(0, 255, 255, 0.2); /* Временно включи для отладки */ 
         }
 
         .slot {
-            background: #1a1a1a;
-            height: 80px;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
-            border: 1px solid #333;
-            border-radius: 5px;
-            transition: 0.2s;
-        }
-
-        /* Анимация победного слота */
-        .slot.win {
-            background: rgba(255, 234, 0, 0.2);
-            border-color: var(--neon-yellow);
-            box-shadow: 0 0 15px var(--neon-yellow);
-            transform: scale(1.05);
-        }
-
-        /* КНОПКА */
-        .spin-btn {
-            background: var(--neon-purple);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            cursor: pointer;
-            font-family: inherit;
+            align-items: center;
+            font-size: 1.8rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: 0.3s;
-            clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%);
+            text-shadow: 2px 2px 0 #000;
+            user-select: none;
         }
 
-        .spin-btn:hover {
-            background: #d048ff;
-            box-shadow: 0 0 20px var(--neon-purple);
-            transform: translateY(-2px);
+        /* Стили иконок (Текст вместо картинок пока) */
+        .item-500 { color: var(--neon-yellow); -webkit-text-stroke: 1px #b8860b; }
+        .item-error { color: red; background: black; padding: 2px; font-size: 1rem; border: 1px solid red; }
+        .item-mem { background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent; font-weight: bold; }
+        .item-ban { color: red; font-weight: bold; font-family: monospace; letter-spacing: 2px; background: white; color: red; padding: 0 5px; }
+        .item-safe { font-size: 2.5rem; } /* Эмодзи сейфа */
+
+        /* Анимация вращения */
+        .spinning .slot {
+            animation: blurText 0.1s infinite;
+            color: transparent !important;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
 
-        .spin-btn:disabled {
-            background: #555;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
+        @keyframes blurText {
+            0% { transform: translateY(-5px); }
+            50% { transform: translateY(5px); }
+            100% { transform: translateY(-5px); }
         }
 
-        .message {
-            height: 20px;
-            margin-top: 15px;
-            font-size: 0.9rem;
-            color: #aaa;
-        }
-
-        .legend {
-            margin-top: 30px;
-            font-size: 0.8rem;
-            color: #666;
-            display: flex;
-            justify-content: space-around;
-            border-top: 1px solid #333;
-            padding-top: 10px;
+        /* КНОПКА (Невидимая зона поверх желтой кнопки на картинке) */
+        .trigger-btn {
+            position: absolute;
+            bottom: 8%;  /* Подбираем позицию */
+            right: 15%;
+            width: 12%;
+            height: 8%;
+            background: rgba(255, 255, 0, 0.0); /* Прозрачная */
+            cursor: pointer;
+            border-radius: 10px;
+            z-index: 10;
         }
         
+        /* Эффект нажатия */
+        .trigger-btn:active {
+            background: rgba(255, 255, 0, 0.3); 
+        }
+
+        /* ТАБЛО С РЕЗУЛЬТАТОМ (Где синий экранчик сверху) */
+        .score-display {
+            position: absolute;
+            top: 29%;
+            left: 35%;
+            width: 30%;
+            text-align: center;
+            color: var(--neon-cyan);
+            font-family: monospace;
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px var(--neon-cyan);
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>RESOURCE MINER</h1>
+    <div class="machine-container">
+        <!-- ТАБЛО -->
+        <div class="score-display" id="score">CREDITS: 0</div>
 
-        <div class="score-board">
-            <span>CREDITS:</span>
-            <span id="score">0</span>
+        <!-- СЕТКА СЛОТОВ -->
+        <div class="slots-grid" id="grid">
+            <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+            <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+            <div class="slot"></div><div class="slot"></div><div class="slot"></div>
         </div>
 
-        <div class="slot-machine" id="grid">
-            <!-- 9 Слотов генерируются здесь -->
-            <div class="slot">?</div><div class="slot">?</div><div class="slot">?</div>
-            <div class="slot">?</div><div class="slot">?</div><div class="slot">?</div>
-            <div class="slot">?</div><div class="slot">?</div><div class="slot">?</div>
-        </div>
-
-        <button class="spin-btn" id="spinBtn" onclick="spin()">MINING START</button>
-        
-        <div class="message" id="msg">>> SYSTEM READY</div>
-
-        <div class="legend">
-            <div>💎 = 1000</div>
-            <div>🔋 = 200</div>
-            <div>💾 = 50</div>
-            <div>👾 = 10</div>
-        </div>
+        <!-- КНОПКА ЗАПУСКА -->
+        <div class="trigger-btn" onclick="spin()" title="НАЖМИ МЕНЯ"></div>
     </div>
 
     <script>
-        // === НАСТРОЙКИ ИГРЫ ===
-        const RESOURCES = [
-            { icon: '👾', value: 10, chance: 40 }, // Глитч (Частый)
-            { icon: '💾', value: 50, chance: 30 }, // Дискета (Обычный)
-            { icon: '🔋', value: 200, chance: 20 }, // Батарея (Редкий)
-            { icon: '💎', value: 1000, chance: 10 } // Алмаз (Легендарный)
+        // НАСТРОЙКИ ПРЕДМЕТОВ (Как на картинке)
+        const ITEMS = [
+            { id: '500', html: '<span class="item-500">500⚡</span>', val: 500 },
+            { id: '1000', html: '<span class="item-500">1000⚡</span>', val: 1000 },
+            { id: '404', html: '<div class="item-error">404<br>ERROR</div>', val: 0 },
+            { id: 'MEM', html: '<span class="item-mem">MEM</span>', val: 50 },
+            { id: 'BAN', html: '<span class="item-ban">БАН</span>', val: -100 },
+            { id: 'SAFE', html: '<span class="item-safe">🗄️</span>', val: 2000 } // Сейф
         ];
 
-        const WIN_THRESHOLD = 5; // Сколько нужно собрать (5 из 9)
-
-        let score = 0;
         let isSpinning = false;
+        let credits = 0;
+        const grid = document.getElementById('grid');
         const slots = document.querySelectorAll('.slot');
         const scoreEl = document.getElementById('score');
-        const msgEl = document.getElementById('msg');
-        const btn = document.getElementById('spinBtn');
 
-        // Генерация случайного ресурса с учетом шансов
-        function getRandomResource() {
-            const rand = Math.random() * 100;
-            let sum = 0;
-            for (let res of RESOURCES) {
-                sum += res.chance;
-                if (rand <= sum) return res;
-            }
-            return RESOURCES[0];
+        // Заполняем случайно при старте
+        slots.forEach(s => s.innerHTML = getRandomItem().html);
+
+        function getRandomItem() {
+            return ITEMS[Math.floor(Math.random() * ITEMS.length)];
         }
 
-        // Звуковой эффект (Синтезатор)
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-
-            if (type === 'spin') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'win') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(800, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            }
-        }
-
-        async function spin() {
-            if (isSpinning) return;
+        function spin() {
+            if(isSpinning) return;
             isSpinning = true;
-            btn.disabled = true;
-            msgEl.innerText = ">> MINING IN PROGRESS...";
-            
-            // Сброс подсветки
-            slots.forEach(s => s.classList.remove('win'));
+            grid.classList.add('spinning'); // Эффект размытия
 
-            // Анимация прокрутки (2 секунды)
-            let spins = 0;
+            // Простая анимация смены контента
+            let cycles = 0;
             const interval = setInterval(() => {
-                slots.forEach(slot => {
-                    slot.innerText = getRandomResource().icon;
-                });
-                playSound('spin');
-                spins++;
-                if (spins > 20) { // Останавливаемся после 20 тиков
+                slots.forEach(s => s.innerHTML = getRandomItem().html);
+                cycles++;
+                if(cycles > 15) { // Останавливаем через 15 тактов
                     clearInterval(interval);
-                    finalizeResult();
+                    finalize();
                 }
             }, 100);
         }
 
-        function finalizeResult() {
-            const finalResults = [];
+        function finalize() {
+            grid.classList.remove('spinning');
+            isSpinning = false;
+
+            // Генерируем финальный расклад
+            const results = [];
             const counts = {};
 
-            // 1. Генерируем финальный результат
-            slots.forEach((slot, index) => {
-                const res = getRandomResource();
-                slot.innerText = res.icon;
-                slot.dataset.type = res.icon; // Сохраняем тип для проверки
-                finalResults.push(res);
-                
-                // Считаем количество
-                counts[res.icon] = (counts[res.icon] || 0) + 1;
+            slots.forEach(slot => {
+                const item = getRandomItem();
+                slot.innerHTML = item.html;
+                results.push(item);
+                counts[item.id] = (counts[item.id] || 0) + 1;
             });
 
-            // 2. Проверяем победу
-            let won = false;
-            let winType = null;
-
-            for (const [icon, count] of Object.entries(counts)) {
-                if (count >= WIN_THRESHOLD) {
-                    won = true;
-                    winType = icon;
-                    break;
+            // Проверка победы (5+ одинаковых)
+            let winAmount = 0;
+            for(let key in counts) {
+                if(counts[key] >= 5) {
+                    // Находим стоимость предмета
+                    const itemObj = ITEMS.find(i => i.id === key);
+                    winAmount = itemObj.val;
                 }
             }
 
-            // 3. Обработка результата
-            if (won) {
-                const resourceData = RESOURCES.find(r => r.icon === winType);
-                const winAmount = resourceData.value * 1; // Можно умножить, если хочешь
-                
-                score += winAmount;
-                scoreEl.innerText = score;
-                msgEl.innerText = `>> SUCCESS! FOUND ${winType} PACK (+${winAmount})`;
-                msgEl.style.color = "var(--neon-yellow)";
-                playSound('win');
-
-                // Подсветка победных слотов
-                slots.forEach(slot => {
-                    if (slot.dataset.type === winType) slot.classList.add('win');
-                });
-            } else {
-                msgEl.innerText = ">> NO RESOURCES FOUND";
-                msgEl.style.color = "#aaa";
+            if(winAmount !== 0) {
+                credits += winAmount;
+                scoreEl.innerText = `WIN: ${winAmount}`;
+                setTimeout(() => scoreEl.innerText = `CREDITS: ${credits}`, 2000);
+                // Тут можно добавить звук победы
             }
-
-            isSpinning = false;
-            btn.disabled = false;
         }
     </script>
 </body>
