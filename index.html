@@ -3,382 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIKA TERMINAL V3</title>
+    <title>AIKA WORD HACKER</title>
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-pink: #bc13fe;
             --neon-yellow: #ffea00;
-            --screen-bg: #e0f7fa;
-            --body-bg: #050505;
-            --frame-color: #1a237e;
+            --bg-dark: #050505;
+            --letter-bg: #222;
+            --letter-active: #fff;
         }
 
         * { box-sizing: border-box; }
-
         body {
-            background-color: var(--body-bg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Arial Black', sans-serif;
-            overflow: hidden;
-        }
-
-        .terminal-body {
-            background: var(--frame-color);
-            width: 400px;
-            padding: 20px;
-            border-radius: 30px;
-            border: 4px solid var(--neon-blue);
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
-            position: relative;
+            background-color: var(--bg-dark);
+            font-family: 'Courier New', monospace;
+            color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            transition: 0.3s;
-        }
-        /* Красная подсветка при БАНЕ */
-        .terminal-body.banned {
-            border-color: red;
-            box-shadow: 0 0 50px red;
-            filter: grayscale(0.5) sepia(1) hue-rotate(-50deg) saturate(5);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
         }
 
-        .robot-head {
-            width: 120px; height: 80px;
-            background: #283593;
-            border: 3px solid var(--neon-blue);
-            border-radius: 15px;
-            position: absolute; top: -90px;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 15px var(--neon-blue);
-        }
-        .robot-eyes { display: flex; gap: 15px; }
-        .eye { width: 25px; height: 25px; background: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); transition:0.3s; }
-        
-        /* Глаза при бане */
-        .banned .eye { background: red; box-shadow: 0 0 10px red; height: 5px; margin-top: 10px; }
-
-        .antenna { position: absolute; top: -30px; width: 4px; height: 30px; background: gray; }
-        .antenna.left { left: 20px; transform: rotate(-20deg); }
-        .antenna.right { right: 20px; transform: rotate(20deg); }
-        .antenna::after { content: ''; position: absolute; top: -8px; left: -3px; width: 10px; height: 10px; background: var(--neon-yellow); border-radius: 50%; animation: blink 1s infinite alternate; }
-
-        .screen-container {
-            background: var(--screen-bg);
+        /* --- 1. ВЕРХНЯЯ ЧАСТЬ: СЛОВО --- */
+        .game-area {
             width: 100%;
-            border-radius: 15px;
-            padding: 10px;
-            border: 3px solid var(--neon-blue);
-            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.5);
-            margin-bottom: 20px;
-            position: relative;
+            padding: 20px;
+            text-align: center;
+            background: #111;
+            border-bottom: 2px solid var(--neon-blue);
+            margin-bottom: 30px;
         }
 
-        .score-board {
-            background: #000;
-            color: var(--neon-blue);
-            font-family: 'Courier New', monospace;
-            padding: 5px 10px;
-            border-radius: 5px;
-            text-align: center;
-            margin-bottom: 10px;
-            border: 1px solid var(--neon-blue);
-            font-size: 1.2rem;
-            display: flex; justify-content: space-between;
+        h1 { color: var(--neon-pink); margin: 0 0 20px 0; text-shadow: 0 0 10px var(--neon-pink); }
+        
+        .hint-text { color: #aaa; margin-bottom: 20px; font-size: 1.2rem; font-style: italic; }
+
+        .word-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .letter-box {
+            width: 60px; height: 80px;
+            background: var(--letter-bg);
+            border: 2px solid #444;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: transparent; /* Буква скрыта */
+            transition: 0.3s;
+            cursor: default;
         }
         
-        /* Инвентарь для подарков */
-        .inventory { font-size: 1rem; }
+        .letter-box.revealed {
+            background: var(--neon-blue);
+            color: black;
+            border-color: white;
+            box-shadow: 0 0 20px var(--neon-blue);
+            transform: rotateY(360deg); /* Анимация переворота */
+            transition: 0.6s;
+        }
 
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        /* КЛАВИАТУРА (Всплывает когда можно угадать) */
+        .keyboard {
+            display: none; /* Скрыта по умолчанию */
+            margin-top: 20px;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 600px;
+        }
+        .keyboard.active { display: flex; }
+        
+        .key-btn {
+            background: #333;
+            border: 1px solid #555;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+        .key-btn:hover { background: #555; }
+        .key-btn.used { opacity: 0.3; cursor: not-allowed; background: black; }
 
-        .slot {
-            background: rgba(255, 255, 255, 0.6);
-            height: 80px;
-            border-radius: 8px;
-            display: flex; justify-content: center; align-items: center;
+        /* СТАТУС ХОДА */
+        .turn-status {
+            margin-top: 15px;
             font-size: 1.5rem;
-            border: 2px solid transparent;
-            transition: 0.3s;
-            overflow: hidden;
-        }
-        .slot.win { background: #fff; border-color: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); transform: scale(1.05); z-index: 2; }
-
-        .control-panel {
-            width: 100%; height: 80px;
-            background: #111;
-            border-top: 3px solid var(--neon-pink);
-            border-radius: 0 0 20px 20px;
-            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
-            background-image: radial-gradient(circle at 20% 50%, #333 5px, transparent 6px), radial-gradient(circle at 30% 50%, #333 5px, transparent 6px);
+            color: var(--neon-yellow);
+            height: 30px;
         }
 
-        .spin-btn {
-            width: 70px; height: 50px;
-            background: var(--neon-yellow);
-            border: none; border-radius: 10px;
-            box-shadow: 0 5px 0 #b8860b, 0 0 15px var(--neon-yellow);
-            cursor: pointer; position: relative; transition: 0.1s;
+
+        /* --- 2. НИЖНЯЯ ЧАСТЬ: ТЕРМИНАЛ (Скопирован с улучшением масштаба) --- */
+        .terminal-wrapper {
+            transform: scale(0.8); /* Чуть уменьшим, чтобы влезло */
+            margin-top: -20px;
         }
-        .spin-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #b8860b; }
-        .spin-btn::after { content: 'PUSH'; font-size: 0.7rem; font-weight: bold; color: #555; }
-        .spin-btn:disabled { background: #555; box-shadow: none; cursor: not-allowed; color: #888; }
 
-        /* ВСПЛЫВАЮЩИЙ МЕМ */
-        .meme-popup {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            width: 300px;
-            background: white;
-            border: 4px solid black;
-            padding: 10px;
-            z-index: 100;
-            text-align: center;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 0 100vw rgba(0,0,0,0.8);
+        /* (Сюда вставляем CSS терминала из прошлого ответа, сокращенно) */
+        .terminal-body {
+            background: #1a237e; width: 400px; padding: 20px; border-radius: 30px;
+            border: 4px solid var(--neon-blue); box-shadow: 0 0 30px rgba(0,243,255,0.3);
+            position: relative; display: flex; flex-direction: column; align-items: center;
         }
-        .meme-popup.show { transform: translate(-50%, -50%) scale(1); }
-        .meme-img { width: 100%; image-rendering: pixelated; }
-        .close-meme { margin-top: 10px; background: black; color: white; border: none; padding: 5px 10px; cursor: pointer; font-family: inherit; }
+        .terminal-body.banned { border-color: red; filter: grayscale(1); pointer-events: none; }
+        
+        .screen-container { background: #e0f7fa; width: 100%; border-radius: 15px; padding: 10px; border: 3px solid var(--neon-blue); margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .slot { background: rgba(255,255,255,0.6); height: 70px; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+        .slot.win { background: #fff; border-color: var(--neon-yellow); transform: scale(1.05); box-shadow: 0 0 15px gold; }
+        
+        .spin-btn { width: 100%; height: 50px; background: var(--neon-yellow); border: none; border-radius: 10px; font-weight: bold; font-size: 1.2rem; cursor: pointer; }
+        .spin-btn:disabled { background: #555; cursor: not-allowed; }
 
-        /* --- СТИЛИ ИКОНОК --- */
-        .item-500 { color: var(--neon-yellow); text-shadow: 2px 2px 0 #000; -webkit-text-stroke: 1px #b8860b; }
-        .item-error { color: white; background: red; padding: 5px; font-size: 0.8rem; border: 2px solid black; border-radius: 5px; line-height: 1; text-align: center; }
-        .item-mem { background: linear-gradient(90deg, red, orange, yellow, green, blue, violet); -webkit-background-clip: text; color: transparent; font-weight: 900; font-size: 1.2rem; }
-        .item-ban { color: red; font-family: 'Courier New', Courier, monospace; font-weight: bold; border: 2px solid red; padding: 0 5px; background: #fff; }
-        .item-gift { font-size: 2.5rem; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.3)); }
-        .item-x2 { color: #0f0; text-shadow: 2px 2px 0 #000; font-style: italic; font-size: 2rem; }
+        /* Иконки */
+        .item-500 { color: #ffea00; -webkit-text-stroke: 1px #b8860b; font-weight:900; font-size:1.3rem;}
+        .item-err { background: red; color: white; padding: 2px; font-size: 0.7rem; }
+        .item-ban { color: red; border: 2px solid red; background: white; font-weight: bold; }
 
-        @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
-    <div class="terminal-body" id="terminal">
+    <!-- ЗОНА ИГРЫ -->
+    <div class="game-area">
+        <h1>WORD HACKER</h1>
+        <div class="hint-text" id="hint">ЗАГАДКА: Главный инструмент программиста?</div>
         
-        <div class="robot-head">
-            <div class="antenna left"></div>
-            <div class="antenna right"></div>
-            <div class="robot-eyes">
-                <div class="eye"></div><div class="eye"></div>
-            </div>
+        <!-- Слово -->
+        <div class="word-container" id="wordDisplay">
+            <!-- Буквы генерятся JS -->
         </div>
 
-        <div class="screen-container">
-            <div class="score-board">
-                <span id="score">CREDITS: 0</span>
-                <span class="inventory" id="inventory"></span>
+        <div class="turn-status" id="status">КРУТИ БАРАБАН!</div>
+
+        <!-- Клавиатура -->
+        <div class="keyboard" id="keyboard">
+            <!-- Кнопки генерятся JS -->
+        </div>
+    </div>
+
+    <!-- ТЕРМИНАЛ -->
+    <div class="terminal-wrapper">
+        <div class="terminal-body" id="terminal">
+            <!-- Экран -->
+            <div class="screen-container">
+                <div class="grid" id="grid">
+                    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+                    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+                    <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+                </div>
             </div>
             
-            <div class="grid" id="grid">
-                <!-- Слоты -->
-                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
-            </div>
+            <button class="spin-btn" onclick="spin()">ВЗЛОМАТЬ СИСТЕМУ</button>
         </div>
-
-        <div class="control-panel">
-            <div style="color:#555; font-size:0.8rem;" id="statusText">SYSTEM<br>READY</div>
-            <button class="spin-btn" onclick="spin()"></button>
-        </div>
-
-        <!-- Всплывающее окно для МЕМА -->
-        <div class="meme-popup" id="memePopup">
-            <h3 style="margin:0 0 10px;">RARE MEME FOUND!</h3>
-            <img src="" class="meme-img" id="memeImg">
-            <button class="close-meme" onclick="closeMeme()">OK LOL</button>
-        </div>
-
     </div>
 
     <script>
-        // === ДАННЫЕ ===
-        // Ссылки на пиксельные мемы (заглушки, можно поменять на свои)
-        const MEME_URLS = [
-            "https://media.tenor.com/GfSX-LV7jP4AAAAi/cat-cat-meme.gif", // Cat
-            "https://media.tenor.com/g42-vR9s3p4AAAAi/nyan-cat-poptart-cat.gif", // Nyan
-            "https://media.tenor.com/262I127u2Z4AAAAi/doge-meme.gif" // Doge
-        ];
-
+        // === КОНФИГ ИГРЫ ===
+        const WORD = "КЛАВИАТУРА"; // Загаданное слово
+        const HINT = "Что ты топчешь пальцами?";
+        
         const ITEMS = [
-            { id: '500', html: '<span class="item-500">500⚡</span>', type: 'score', val: 500 },
-            { id: '1000', html: '<span class="item-500">1K⚡</span>', type: 'score', val: 1000 },
-            { id: 'MEM', html: '<span class="item-mem">MEM</span>', type: 'meme', val: 0 },
-            { id: 'BAN', html: '<span class="item-ban">БАН</span>', type: 'ban', val: 0 },
-            { id: 'GIFT', html: '<span class="item-gift">🎁</span>', type: 'gift', val: 0 }, // Подарок
-            { id: 'X2', html: '<span class="item-x2">X2</span>', type: 'multi', val: 0 }
+            { id: 'TURN', html: '<span class="item-500">ХОД</span>', type: 'turn' },      // Выпало право хода
+            { id: 'SCORE', html: '<span class="item-500">+500</span>', type: 'score' },    // Очки
+            { id: 'BAN', html: '<span class="item-ban">БАН</span>', type: 'ban' },        // Пропуск
+            { id: 'GIFT', html: '🎁', type: 'gift' },
+            { id: 'EMPTY', html: '---', type: 'empty' }
         ];
 
-        // Состояние игры
-        let state = {
-            credits: 1000, // Стартовый баланс, чтобы было что удваивать
-            gifts: 0,
+        // Перевешиваем шансы (чтобы БАН падал реже)
+        // В массиве больше 'TURN' и 'EMPTY', меньше 'BAN'
+        const POOL = [
+            ...Array(10).fill(ITEMS[0]), // 10 шансов на ХОД
+            ...Array(5).fill(ITEMS[1]),  // 5 шансов на ОЧКИ
+            ...Array(8).fill(ITEMS[4]),  // 8 пустышек
+            ITEMS[2], ITEMS[2],          // 2 БАНА
+            ITEMS[3]                     // 1 ПОДАРОК
+        ];
+
+        let gameState = {
+            openedLetters: [],
             isSpinning: false,
-            isBanned: false
+            canGuess: false
         };
 
-        // DOM Элементы
+        // === ИНИЦИАЛИЗАЦИЯ ===
+        document.getElementById('hint').innerText = `ПОДСКАЗКА: ${HINT}`;
+        
+        // 1. Рисуем слово
+        const wordContainer = document.getElementById('wordDisplay');
+        const letters = WORD.split('');
+        
+        letters.forEach((char, index) => {
+            const div = document.createElement('div');
+            div.className = 'letter-box';
+            div.dataset.char = char;
+            div.id = `letter-${index}`;
+            wordContainer.appendChild(div);
+        });
+
+        // 2. Рисуем клавиатуру
+        const kbd = document.getElementById('keyboard');
+        const alphabet = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+        alphabet.split('').forEach(char => {
+            const btn = document.createElement('button');
+            btn.className = 'key-btn';
+            btn.innerText = char;
+            btn.onclick = () => guessLetter(char, btn);
+            kbd.appendChild(btn);
+        });
+
+        // 3. Заполняем слоты начально
         const slots = document.querySelectorAll('.slot');
-        const scoreEl = document.getElementById('score');
-        const invEl = document.getElementById('inventory');
-        const btn = document.querySelector('.spin-btn');
-        const terminal = document.getElementById('terminal');
-        const statusText = document.getElementById('statusText');
-        const memePopup = document.getElementById('memePopup');
-        const memeImg = document.getElementById('memeImg');
-
-        // Звук
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function beep(freq=600, dur=0.1, type='square') {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.value = freq;
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start();
-            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
-            osc.stop(audioCtx.currentTime + dur);
-        }
-
-        // Инит
-        updateUI();
         slots.forEach(s => s.innerHTML = getRandomItem().html);
 
-        function getRandomItem() {
-            return ITEMS[Math.floor(Math.random() * ITEMS.length)];
-        }
 
-        function updateUI() {
-            scoreEl.innerText = `CREDITS: ${state.credits}`;
-            // Отображаем подарки как иконки
-            invEl.innerText = "🎁".repeat(state.gifts);
+        // === ЛОГИКА ===
+        function getRandomItem() {
+            return POOL[Math.floor(Math.random() * POOL.length)];
         }
 
         function spin() {
-            if(state.isSpinning || state.isBanned) return;
-            state.isSpinning = true;
+            if(gameState.isSpinning || gameState.canGuess) return;
+            gameState.isSpinning = true;
+            document.getElementById('status').innerText = "ВЫЧИСЛЕНИЕ...";
+            document.getElementById('status').style.color = "var(--neon-blue)";
 
-            // Анимация нажатия
-            btn.style.transform = "translateY(5px)";
-            setTimeout(() => btn.style.transform = "", 100);
-
-            slots.forEach(s => s.classList.remove('win'));
-
+            // Анимация
             let cycles = 0;
             const interval = setInterval(() => {
                 slots.forEach(s => s.innerHTML = getRandomItem().html);
-                beep(200, 0.05);
                 cycles++;
-                if(cycles > 20) {
+                if(cycles > 15) {
                     clearInterval(interval);
-                    finalize();
+                    finalizeSpin();
                 }
             }, 80);
         }
 
-        function finalize() {
-            state.isSpinning = false;
-            const counts = {};
-            const resultItems = [];
+        function finalizeSpin() {
+            gameState.isSpinning = false;
+            
+            // Для простоты: считаем, что выпало то, чего больше всего на экране
+            // Или просто рандомим результат события
+            const result = POOL[Math.floor(Math.random() * POOL.length)]; // Упрощенная логика "колеса"
+            
+            // Показываем результат на всех слотах для эффекта
+            slots.forEach(s => s.innerHTML = result.html);
 
-            // Генерируем результат
-            slots.forEach((slot) => {
-                const item = getRandomItem();
-                slot.innerHTML = item.html;
-                slot.dataset.id = item.id;
-                counts[item.id] = (counts[item.id] || 0) + 1;
-            });
+            handleResult(result);
+        }
 
-            // ПРОВЕРКА НА ПОБЕДУ (5+)
-            let winId = null;
-            for(let id in counts) {
-                if(counts[id] >= 5) winId = id;
+        function handleResult(item) {
+            const status = document.getElementById('status');
+            
+            if(item.type === 'turn' || item.type === 'score') {
+                status.innerText = "БУКВА! ВЫБИРАЙ НА КЛАВИАТУРЕ";
+                status.style.color = "#0f0";
+                enableKeyboard(true);
+            } 
+            else if (item.type === 'ban') {
+                status.innerText = "БАН! ПРОПУСК ХОДА";
+                status.style.color = "red";
+                // Блокировка на 2 сек
+                setTimeout(() => { status.innerText = "КРУТИ ЕЩЕ РАЗ"; status.style.color = "yellow"; }, 2000);
             }
-
-            if(winId) {
-                const winItem = ITEMS.find(i => i.id === winId);
-                
-                // Подсветка
-                slots.forEach(s => {
-                    if(s.dataset.id === winId) s.classList.add('win');
-                });
-
-                beep(800, 0.1, 'sawtooth');
-                handleWin(winItem);
+            else if (item.type === 'gift') {
+                status.innerText = "ПРИЗ! ОТКРЫВАЮ БУКВУ!";
+                // Открываем случайную закрытую букву
+                openRandomLetter();
+            }
+            else {
+                status.innerText = "ПУСТО... КРУТИ СНОВА";
+                status.style.color = "#aaa";
             }
         }
 
-        function handleWin(item) {
-            const type = item.type;
-            
-            if(type === 'score') {
-                state.credits += item.val;
-                statusText.innerHTML = `WIN!<br>+${item.val}`;
-            }
-            
-            else if(type === 'multi') {
-                state.credits *= 2;
-                statusText.innerHTML = `LUCKY!<br>X2 MULTI`;
-                beep(1200, 0.3, 'square');
-            }
-            
-            else if(type === 'gift') {
-                state.gifts++;
-                statusText.innerHTML = `WOW!<br>GIFT +1`;
-                beep(1500, 0.3, 'sine');
-            }
-            
-            else if(type === 'ban') {
-                applyBan();
-            }
-            
-            else if(type === 'meme') {
-                showMeme();
-            }
-
-            updateUI();
+        function enableKeyboard(enable) {
+            gameState.canGuess = enable;
+            const kbd = document.getElementById('keyboard');
+            if(enable) kbd.classList.add('active');
+            else kbd.classList.remove('active');
         }
 
-        function applyBan() {
-            state.isBanned = true;
-            terminal.classList.add('banned');
-            statusText.innerHTML = `SYSTEM<br>BANNED`;
-            statusText.style.color = "red";
+        function guessLetter(char, btn) {
+            if(!gameState.canGuess) return;
+            
+            btn.classList.add('used');
             btn.disabled = true;
             
-            // Звук ошибки
-            beep(150, 0.5, 'sawtooth');
-            
-            // Разбан через 5 секунд
-            let countdown = 5;
-            const timer = setInterval(() => {
-                countdown--;
-                statusText.innerHTML = `WAIT<br>${countdown}s`;
-                if(countdown <= 0) {
-                    clearInterval(timer);
-                    state.isBanned = false;
-                    terminal.classList.remove('banned');
-                    statusText.innerHTML = `SYSTEM<br>READY`;
-                    statusText.style.color = "#555";
-                    btn.disabled = false;
+            let found = false;
+            // Проверяем букву
+            letters.forEach((l, i) => {
+                if(l === char) {
+                    const box = document.getElementById(`letter-${i}`);
+                    box.innerText = char;
+                    box.classList.add('revealed');
+                    gameState.openedLetters.push(i);
+                    found = true;
                 }
-            }, 1000);
+            });
+
+            const status = document.getElementById('status');
+            if(found) {
+                status.innerText = "ЕСТЬ ТАКАЯ БУКВА!";
+                checkWin();
+            } else {
+                status.innerText = "НЕТ ТАКОЙ БУКВЫ...";
+            }
+
+            // Завершаем ход
+            enableKeyboard(false);
+            
+            // Если не выиграл, даем крутить дальше
+            if(gameState.openedLetters.length < letters.length) {
+                 setTimeout(() => { 
+                     if(!gameState.isSpinning) status.innerText = "КРУТИ ДАЛЬШЕ"; 
+                 }, 1500);
+            }
         }
 
-        function showMeme() {
-            const randomMeme = MEME_URLS[Math.floor(Math.random() * MEME_URLS.length)];
-            memeImg.src = randomMeme;
-            memePopup.classList.add('show');
+        function openRandomLetter() {
+            // Находим индексы закрытых букв
+            let closedIndices = [];
+            letters.forEach((_, i) => {
+                if(!gameState.openedLetters.includes(i)) closedIndices.push(i);
+            });
+
+            if(closedIndices.length > 0) {
+                const randIndex = closedIndices[Math.floor(Math.random() * closedIndices.length)];
+                const char = letters[randIndex];
+                
+                const box = document.getElementById(`letter-${randIndex}`);
+                box.innerText = char;
+                box.classList.add('revealed');
+                gameState.openedLetters.push(randIndex);
+                checkWin();
+            }
         }
 
-        function closeMeme() {
-            memePopup.classList.remove('show');
+        function checkWin() {
+            // Уникальные буквы в слове
+            const uniqueChars = new Set(letters).size;
+            // Мы не можем просто сравнить длину, так как одна буква может встречаться 2 раза
+            // Проще проверить, есть ли закрытые блоки
+            const allRevealed = Array.from(document.querySelectorAll('.letter-box')).every(b => b.classList.contains('revealed'));
+            
+            if(allRevealed) {
+                document.getElementById('status').innerText = "ПОБЕДА! СИСТЕМА ВЗЛОМАНА!";
+                document.getElementById('status').style.color = "var(--neon-pink)";
+                document.querySelector('.spin-btn').disabled = true;
+                
+                // Фейерверк или эффект
+                document.body.style.background = "#220022";
+            }
         }
 
     </script>
