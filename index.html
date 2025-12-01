@@ -100,3 +100,294 @@
 
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
         .slot {
+            background: rgba(255, 255, 255, 0.6); height: 80px; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; border: 2px solid transparent; transition: 0.3s; overflow: hidden;
+        }
+        .slot.win { background: #fff; border-color: var(--neon-yellow); transform: scale(1.05); z-index: 2; }
+
+        .control-panel {
+            width: 100%; height: 80px; background: #111; border-top: 3px solid var(--neon-pink);
+            border-radius: 0 0 20px 20px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+        }
+        .spin-btn {
+            width: 70px; height: 50px; background: var(--neon-yellow); border: none; border-radius: 10px;
+            box-shadow: 0 5px 0 #b8860b, 0 0 15px var(--neon-yellow); cursor: pointer; position: relative;
+        }
+        .spin-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #b8860b; }
+        .spin-btn:disabled { background: #555; cursor: not-allowed; }
+
+        /* Клавиатура для ввода букв (Скрыта по умолчанию) */
+        .keyboard-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 100;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .keyboard-modal.show { display: flex; }
+        .keyboard-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
+        .key {
+            width: 40px; height: 40px; background: #333; color: white; border: 1px solid #555;
+            cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 1.2rem;
+        }
+        .key:hover { background: var(--neon-blue); color: black; }
+        .key.used { background: black; color: #333; border-color: #222; cursor: not-allowed; }
+
+        /* Стили иконок */
+        .item-500 { color: var(--neon-yellow); -webkit-text-stroke: 1px #b8860b; }
+        .item-mem { background: linear-gradient(90deg, red, violet); -webkit-background-clip: text; color: transparent; font-weight: 900; }
+        .item-ban { color: red; border: 2px solid red; padding: 0 5px; background: #fff; font-size: 1.2rem;}
+        .item-gift { font-size: 2.5rem; }
+        .item-x2 { color: #0f0; font-style: italic; }
+
+        @keyframes pop { 50% { transform: scale(1.2); } }
+    </style>
+</head>
+<body>
+
+    <!-- ЗАГАДАННОЕ СЛОВО -->
+    <div class="word-display" id="wordContainer">
+        <!-- Буквы появятся тут -->
+    </div>
+
+    <div style="color: #888; margin-bottom: 10px;" id="taskHint">ЗАДАНИЕ: Загрузка...</div>
+
+    <!-- ТЕРМИНАЛ -->
+    <div class="terminal-body" id="terminal">
+        <div class="robot-head">
+            <div class="antenna left"></div><div class="antenna right"></div>
+            <div class="robot-eyes"><div class="eye"></div><div class="eye"></div></div>
+        </div>
+
+        <div class="screen-container">
+            <div class="score-board">
+                <span id="score">SCORE: 0</span>
+                <span id="msg">SPIN TO HACK</span>
+            </div>
+            <div class="grid" id="grid">
+                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+                <div class="slot"></div><div class="slot"></div><div class="slot"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div style="color:#555; font-size:0.8rem;">AIKA<br>SYSTEM</div>
+            <button class="spin-btn" onclick="spin()"></button>
+        </div>
+    </div>
+
+    <!-- КЛАВИАТУРА -->
+    <div class="keyboard-modal" id="keyboard">
+        <h2 style="color:white">ВЫБЕРИ БУКВУ</h2>
+        <div class="keyboard-grid" id="keysContainer"></div>
+        <button onclick="closeKeyboard()" style="margin-top:20px; padding:10px;">ОТМЕНА</button>
+    </div>
+
+    <script>
+        // === БАЗА ДАННЫХ СЛОВ ===
+        const WORD_DB = [
+            { word: "ИНТЕРНЕТ", hint: "Глобальная сеть" },
+            { word: "ЮТУБ", hint: "Видеохостинг" },
+            { word: "СТРИМ", hint: "Прямой эфир" },
+            { word: "КРИНЖ", hint: "Испанский стыд (сленг)" },
+            { word: "АЙКА", hint: "Имя ведущей шоу" },
+            { word: "ЛАЙК", hint: "Оценка 'Мне нравится'" },
+            { word: "БАЙТ", hint: "Провокация на комментарий" },
+            { word: "СИГМА", hint: "Крутой парень из мемов" }
+        ];
+
+        // === НАСТРОЙКИ СЛОТОВ ===
+        // Немного упростим логику победы для динамики: теперь 3+ одинаковых иконки дают эффект
+        const ITEMS = [
+            { id: 'LETTER', html: '<span class="item-500">LETTER</span>', type: 'letter', val: 0 }, // Право хода
+            { id: '500', html: '<span class="item-500">500</span>', type: 'score', val: 500 },
+            { id: 'MEM', html: '<span class="item-mem">PRIZE</span>', type: 'prize', val: 0 }, // Открыть букву сразу
+            { id: 'BAN', html: '<span class="item-ban">BAN</span>', type: 'ban', val: 0 },
+            { id: 'X2', html: '<span class="item-x2">X2</span>', type: 'x2', val: 0 }
+        ];
+
+        let state = {
+            word: "",
+            opened: [], // Индексы открытых букв
+            score: 0,
+            isSpinning: false
+        };
+
+        // ИНИЦИАЛИЗАЦИЯ
+        const wordContainer = document.getElementById('wordContainer');
+        const hintEl = document.getElementById('taskHint');
+        const slots = document.querySelectorAll('.slot');
+        const keysContainer = document.getElementById('keysContainer');
+        const msgEl = document.getElementById('msg');
+
+        // Генерация алфавита
+        const ALPHABET = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+        ALPHABET.split('').forEach(char => {
+            const btn = document.createElement('div');
+            btn.className = 'key';
+            btn.innerText = char;
+            btn.onclick = () => checkLetter(char, btn);
+            keysContainer.appendChild(btn);
+        });
+
+        startNewGame();
+
+        function startNewGame() {
+            // Выбор слова
+            const quest = WORD_DB[Math.floor(Math.random() * WORD_DB.length)];
+            state.word = quest.word;
+            state.opened = new Array(state.word.length).fill(false);
+            hintEl.innerText = "ЗАДАНИЕ: " + quest.hint;
+            
+            renderWord();
+            slots.forEach(s => s.innerHTML = getRandomSlotItem().html);
+        }
+
+        function renderWord() {
+            wordContainer.innerHTML = "";
+            state.word.split('').forEach((char, i) => {
+                const box = document.createElement('div');
+                box.className = 'letter-box';
+                if (state.opened[i]) {
+                    box.innerText = char;
+                    box.classList.add('solved');
+                }
+                wordContainer.appendChild(box);
+            });
+            
+            // Проверка полной победы
+            if (!state.opened.includes(false)) {
+                msgEl.innerText = "YOU WON!";
+                msgEl.style.color = "var(--neon-blue)";
+                // Тут можно добавить салют
+                setTimeout(startNewGame, 3000);
+            }
+        }
+
+        // === СЛОТ МАШИНА ===
+        function getRandomSlotItem() {
+            return ITEMS[Math.floor(Math.random() * ITEMS.length)];
+        }
+
+        function spin() {
+            if (state.isSpinning) return;
+            state.isSpinning = true;
+            msgEl.innerText = "HACKING...";
+            
+            let cycles = 0;
+            const interval = setInterval(() => {
+                slots.forEach(s => s.innerHTML = getRandomSlotItem().html);
+                cycles++;
+                if (cycles > 15) {
+                    clearInterval(interval);
+                    finalizeSpin();
+                }
+            }, 80);
+        }
+
+        function finalizeSpin() {
+            state.isSpinning = false;
+            const counts = {};
+            const finalItems = [];
+            
+            slots.forEach(s => {
+                const item = getRandomSlotItem();
+                s.innerHTML = item.html;
+                finalItems.push(item);
+                counts[item.id] = (counts[item.id] || 0) + 1;
+            });
+
+            // Логика: Если выпало 3+ одинаковых -> действие
+            let activeItem = null;
+            for (let id in counts) {
+                if (counts[id] >= 3) { // УПРОСТИЛ ДО 3 ДЛЯ ДИНАМИКИ
+                    activeItem = ITEMS.find(i => i.id === id);
+                    // Подсветка
+                    slots.forEach((s, i) => {
+                        if (finalItems[i].id === id) s.classList.add('win');
+                    });
+                }
+            }
+
+            if (activeItem) handleEffect(activeItem);
+            else msgEl.innerText = "TRY AGAIN";
+        }
+
+        function handleEffect(item) {
+            switch(item.type) {
+                case 'letter':
+                    msgEl.innerText = "PICK A LETTER!";
+                    setTimeout(() => document.getElementById('keyboard').classList.add('show'), 1000);
+                    break;
+                case 'score':
+                    state.score += item.val;
+                    document.getElementById('score').innerText = "SCORE: " + state.score;
+                    msgEl.innerText = `+${item.val} PTS`;
+                    // Тоже даем открыть букву за очки
+                    setTimeout(() => document.getElementById('keyboard').classList.add('show'), 1000);
+                    break;
+                case 'prize':
+                    msgEl.innerText = "AUTO HACK!";
+                    openRandomLetter();
+                    break;
+                case 'ban':
+                    msgEl.innerText = "SYSTEM BAN!";
+                    document.getElementById('terminal').classList.add('banned');
+                    setTimeout(() => document.getElementById('terminal').classList.remove('banned'), 3000);
+                    break;
+                case 'x2':
+                    msgEl.innerText = "DOUBLE HACK!";
+                    openRandomLetter(); // Открывает две
+                    setTimeout(openRandomLetter, 500);
+                    break;
+            }
+        }
+
+        // === ЛОГИКА СЛОВ ===
+        function checkLetter(char, btnElement) {
+            document.getElementById('keyboard').classList.remove('show');
+            btnElement.classList.add('used'); // Отмечаем как использованную
+
+            let found = false;
+            state.word.split('').forEach((c, i) => {
+                if (c === char) {
+                    state.opened[i] = true;
+                    found = true;
+                }
+            });
+
+            if (found) {
+                msgEl.innerText = "CORRECT!";
+                state.score += 100;
+            } else {
+                msgEl.innerText = "WRONG!";
+            }
+            
+            renderWord();
+            document.getElementById('score').innerText = "SCORE: " + state.score;
+            
+            // Убираем подсветку слотов
+            setTimeout(() => slots.forEach(s => s.classList.remove('win')), 1000);
+        }
+
+        function openRandomLetter() {
+            // Найти закрытые индексы
+            const closedIndices = [];
+            state.opened.forEach((isOpen, i) => {
+                if (!isOpen) closedIndices.push(i);
+            });
+
+            if (closedIndices.length > 0) {
+                const randIndex = closedIndices[Math.floor(Math.random() * closedIndices.length)];
+                state.opened[randIndex] = true;
+                renderWord();
+            }
+        }
+
+        function closeKeyboard() {
+            document.getElementById('keyboard').classList.remove('show');
+        }
+
+    </script>
+</body>
+</html>
